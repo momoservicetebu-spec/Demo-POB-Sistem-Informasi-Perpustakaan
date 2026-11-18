@@ -1,74 +1,61 @@
-// JS/anggota.js
-
-// 1. Gambar Halaman Tabel Data Anggota
 function renderMembersSection() {
-    // Ambil data khusus anggota dari script.js
     const members = getRecordsByType('member');
-    
-    // Looping data anggota untuk membentuk baris tabel
     let rowsHtml = '';
+    
     members.forEach((member, index) => {
+        // Membaca format lama dan baru
+        const nama = member.memberName || member.name || '-';
+        const kelas = member.memberClass || member.role || '-';
+        const kontak = member.memberPhone || member.contact || '-';
+        const targetId = member.__backendId || member.id || '';
+
         rowsHtml += `
             <tr class="border-b hover:bg-gray-50">
                 <td class="p-3 text-center">${index + 1}</td>
-                <td class="p-3 font-medium">${member.id || '-'}</td>
-                <td class="p-3">${member.name || '-'}</td>
-                <td class="p-3">${member.phone || '-'}</td>
-                <td class="p-3">
-                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Aktif</span>
-                </td>
+                <td class="p-3 font-medium">${targetId.replace('ID_', '')}</td>
+                <td class="p-3">${nama}</td>
+                <td class="p-3">${kelas}</td>
+                <td class="p-3">${kontak}</td>
                 <td class="p-3 text-center">
-                // Cari kode ini di dalam renderMembersSection() dan ubah menjadi seperti ini:
-                <button onclick="editMember('${member.__backendId || member.id}')" class="text-blue-500 hover:text-blue-700 mx-1 font-medium">Edit</button>
-                <button onclick="deleteMember('${member.__backendId || member.id}')" class="text-red-500 hover:text-red-700 mx-1 font-medium">Hapus</button>                </td>
+                    <button onclick="editMember('${targetId}')" class="text-blue-500 hover:text-blue-700 mx-1 font-medium">Edit</button>
+                    <button onclick="deleteMember('${targetId}')" class="text-red-500 hover:text-red-700 mx-1 font-medium">Hapus</button>
+                </td>
             </tr>
         `;
     });
 
     if (members.length === 0) {
-        rowsHtml = `<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada data anggota tersimpan.</td></tr>`;
+        rowsHtml = `<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada data anggota.</td></tr>`;
     }
 
     return `
         <div class="space-y-6">
-            <!-- Header Halaman -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">Data Anggota</h2>
                     <p class="text-gray-500 text-sm">Kelola daftar anggota perpustakaan.</p>
                 </div>
-                <button onclick="showAddMemberModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah Anggota
+                <button onclick="showAddMemberModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Tambah Anggota
                 </button>
             </div>
-
-            <!-- Fitur Pencarian -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
-                <div class="relative flex-1">
-                    <i data-lucide="search" class="w-5 h-5 absolute left-3 top-2.5 text-gray-400"></i>
-                    <input type="text" onkeyup="filterTable(this.value, 'memberTableBody')" placeholder="Cari nama, ID, atau nomor telepon..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-            </div>
-
-            <!-- Tabel Data -->
+            
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-700 text-sm">
-                            <tr>
-                                <th class="p-3 w-16 text-center">No</th>
-                                <th class="p-3">ID Anggota</th>
-                                <th class="p-3">Nama Lengkap</th>
-                                <th class="p-3">No. Telepon</th>
-                                <th class="p-3">Status</th>
-                                <th class="p-3 w-32 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="memberTableBody" class="text-sm">
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                </div>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-700 text-sm">
+                        <tr>
+                            <th class="p-3 w-16 text-center">No</th>
+                            <th class="p-3">ID Backend</th>
+                            <th class="p-3">Nama Anggota</th>
+                            <th class="p-3">Kelas / Peran</th>
+                            <th class="p-3">Kontak / HP</th>
+                            <th class="p-3 w-32 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        ${rowsHtml}
+                    </tbody>
+                </table>
             </div>
         </div>
     `;

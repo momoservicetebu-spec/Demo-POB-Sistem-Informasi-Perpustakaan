@@ -1,70 +1,76 @@
 // JS/transaksi.js
 
-// 1. Gambar Halaman Tabel Peminjaman
-function renderLoansSection() {
-    // Ambil data peminjaman
-    const loans = getRecordsByType('loan');
-    
+function renderCirculationSection() {
+    // Di database lama, transaksi bernama 'loan' (peminjaman)
+    const transactions = getRecordsByType('loan');
     let rowsHtml = '';
-    loans.forEach((loan, index) => {
-        // Tentukan warna status berdasarkan kondisi
-        let statusBadge = '';
-        if (loan.status === 'Dipinjam') {
-            statusBadge = `<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Dipinjam</span>`;
-        } else {
-            statusBadge = `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Dikembalikan</span>`;
+    
+    transactions.forEach((trans, index) => {
+        const peminjam = trans.loanMember || trans.memberName || '-';
+        const kodeBuku = trans.loanBarcode || trans.bookTitle || '-';
+        
+        // Merapikan format tanggal
+        const tglPinjam = trans.loanDate ? new Date(trans.loanDate).toLocaleDateString('id-ID') : '-';
+        const tglKembali = trans.loanDueDate ? new Date(trans.loanDueDate).toLocaleDateString('id-ID') : '-';
+        
+        const status = trans.loanStatus || trans.status || 'dipinjam';
+        const targetId = trans.__backendId || trans.id || '';
+
+        // Label status warna-warni
+        let statusBadge = `<span class="bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full text-xs font-medium">Dipinjam</span>`;
+        if (status.toLowerCase() === 'dikembalikan') {
+            statusBadge = `<span class="bg-green-100 text-green-800 py-1 px-2 rounded-full text-xs font-medium">Dikembalikan</span>`;
         }
 
         rowsHtml += `
             <tr class="border-b hover:bg-gray-50">
                 <td class="p-3 text-center">${index + 1}</td>
-                <td class="p-3 font-medium">${loan.id || '-'}</td>
-                <td class="p-3">${loan.memberName || '-'}</td>
-                <td class="p-3">${loan.bookTitle || '-'}</td>
-                <td class="p-3">${formatDate(loan.borrowDate)}</td>
+                <td class="p-3 font-medium">${peminjam}</td>
+                <td class="p-3">${kodeBuku}</td>
+                <td class="p-3">${tglPinjam}</td>
+                <td class="p-3">${tglKembali}</td>
                 <td class="p-3">${statusBadge}</td>
                 <td class="p-3 text-center">
-                ${loan.status === 'Dipinjam' ? `<button onclick="processReturn('${loan.__backendId || loan.id}')" class="text-indigo-600 hover:text-indigo-800 mx-1 font-medium bg-indigo-50 px-3 py-1 rounded">Kembalikan</button>` : '-'}                </td>
+                    ${status.toLowerCase() !== 'dikembalikan' ? 
+                        `<button onclick="processReturn('${targetId}')" class="text-green-600 hover:text-green-800 font-medium">Kembalikan</button>` 
+                        : '<span class="text-gray-400 text-xs">Selesai</span>'}
+                </td>
             </tr>
         `;
     });
 
-    if (loans.length === 0) {
-        rowsHtml = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada data transaksi peminjaman.</td></tr>`;
+    if (transactions.length === 0) {
+        rowsHtml = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada data sirkulasi.</td></tr>`;
     }
 
     return `
         <div class="space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Sirkulasi Peminjaman</h2>
-                    <p class="text-gray-500 text-sm">Catat peminjaman dan pengembalian buku.</p>
+                    <h2 class="text-2xl font-bold text-gray-800">Sirkulasi & Peminjaman</h2>
                 </div>
-                <button onclick="showAddLoanModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                    <i data-lucide="book-up" class="w-4 h-4"></i> Pinjamkan Buku
+                <button onclick="showBorrowModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-lucide="arrow-right-left" class="w-4 h-4"></i> Catat Peminjaman
                 </button>
             </div>
-
-            <!-- Tabel Data -->
+            
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-700 text-sm">
-                            <tr>
-                                <th class="p-3 w-16 text-center">No</th>
-                                <th class="p-3">ID Transaksi</th>
-                                <th class="p-3">Peminjam</th>
-                                <th class="p-3">Buku</th>
-                                <th class="p-3">Tgl Pinjam</th>
-                                <th class="p-3">Status</th>
-                                <th class="p-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="loanTableBody" class="text-sm">
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                </div>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-700 text-sm">
+                        <tr>
+                            <th class="p-3 w-16 text-center">No</th>
+                            <th class="p-3">Nama Peminjam</th>
+                            <th class="p-3">Kode Buku</th>
+                            <th class="p-3">Tgl Pinjam</th>
+                            <th class="p-3">Tenggat</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 w-32 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        ${rowsHtml}
+                    </tbody>
+                </table>
             </div>
         </div>
     `;
