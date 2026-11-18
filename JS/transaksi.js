@@ -79,21 +79,25 @@ function renderCirculationSection() {
 // JS/transaksi.js (Lanjutan)
 
 // 1. FUNGSI MEMBUKA FORM PEMINJAMAN BUKU
-function showAddLoanModal() {
-    // Ambil data buku dan anggota dari memori untuk dijadikan pilihan Dropdown
+function showBorrowModal() { // <-- Nama fungsi disesuaikan dengan tombol
     const books = getRecordsByType('book');
     const members = getRecordsByType('member');
 
-    // Buat tag <option> untuk dropdown buku
+    // Membaca data buku (gabungan format lama & baru)
     let bookOptions = '<option value="">-- Pilih Buku --</option>';
     books.forEach(b => {
-        bookOptions += `<option value="${b.title}">${b.id} - ${b.title}</option>`;
+        const idBuku = b.bookBarcode || b.id || '-';
+        const judul = b.bookTitle || b.title || 'Tanpa Judul';
+        // Menyimpan idBuku atau judul sebagai value
+        bookOptions += `<option value="${judul}">${idBuku} - ${judul}</option>`;
     });
 
-    // Buat tag <option> untuk dropdown anggota
+    // Membaca data anggota (gabungan format lama & baru)
     let memberOptions = '<option value="">-- Pilih Anggota --</option>';
     members.forEach(m => {
-        memberOptions += `<option value="${m.name}">${m.id} - ${m.name}</option>`;
+        const idAnggota = m.__backendId ? m.__backendId.replace('ID_', '') : (m.id || '-');
+        const nama = m.memberName || m.name || 'Tanpa Nama';
+        memberOptions += `<option value="${nama}">${idAnggota} - ${nama}</option>`;
     });
 
     const formHtml = `
@@ -130,17 +134,23 @@ async function saveLoan(event) {
     submitBtn.innerText = "Menyimpan...";
     submitBtn.disabled = true;
     
-    const memberName = document.getElementById('loanMember').value;
-    const bookTitle = document.getElementById('loanBook').value;
-    const borrowDate = new Date().toISOString(); // Catat waktu dan tanggal saat ini
+    const peminjam = document.getElementById('loanMember').value;
+    const buku = document.getElementById('loanBook').value;
     
+    // Set Tanggal Pinjam (Hari Ini) dan Tenggat Waktu (Misal 7 Hari kemudian)
+    const tglPinjam = new Date();
+    const tglTenggat = new Date();
+    tglTenggat.setDate(tglPinjam.getDate() + 7);
+    
+    // Disamakan persis dengan format keys database lama Anda!
     const newLoan = {
-        id: 'TRX-' + Math.floor(Math.random() * 10000), // ID Transaksi
-        memberName: memberName,
-        bookTitle: bookTitle,
-        borrowDate: borrowDate,
-        status: 'Dipinjam', // Status awal pasti 'Dipinjam'
-        type: 'loan' // Penting untuk filter
+        loanMember: peminjam,
+        loanBarcode: buku,
+        loanDate: tglPinjam.toISOString(),
+        loanDueDate: tglTenggat.toISOString(),
+        loanStatus: 'dipinjam',
+        type: 'loan',
+        timestamp: new Date().toISOString()
     };
     
     // KIRIM KE GOOGLE APPS SCRIPT
@@ -162,7 +172,6 @@ async function saveLoan(event) {
 async function processReturn(backendId) {
     if(confirm("Apakah Anda yakin buku ini sudah dikembalikan oleh peminjam?")) {
         
-        // Cari data transaksi lama di memori
         const loan = appState.allRecords.find(l => l.__backendId === backendId || l.id === backendId);
         
         if (!loan) {
@@ -170,19 +179,18 @@ async function processReturn(backendId) {
             return;
         }
 
-        // Siapkan data pembaruan (Ubah status dan tambah tanggal kembali)
+        // Update status sesuai format lama database Anda
         const updatedLoan = {
-            ...loan, // Ambil semua data lama (nama peminjam, judul buku, dll)
-            __backendId: loan.__backendId || backendId, // Pastikan ID backend terbawa
-            status: 'Dikembalikan', // Ubah status
-            returnDate: new Date().toISOString() // Catat tanggal dikembalikan
+            ...loan, 
+            __backendId: loan.__backendId || backendId,
+            loanStatus: 'dikembalikan', // Update versi database lama
+            status: 'Dikembalikan', // Jaga-jaga versi baru
+            returnDate: new Date().toISOString() 
         };
 
-        // KIRIM UPDATE KE GOOGLE APPS SCRIPT
         const result = await window.dataSdk.sendData('update', updatedLoan);
         
         if (result && result.success) {
-            // Update data di memori agar tabel langsung berubah
             appState.allRecords = appState.allRecords.map(record => 
                 (record.__backendId === backendId || record.id === backendId) ? updatedLoan : record
             );
@@ -194,4 +202,3 @@ async function processReturn(backendId) {
         }
     }
 }
-
