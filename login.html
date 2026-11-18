@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id" class="h-full bg-gray-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Dashboard Perpustakaan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="CSS/style.css">
+</head>
+<body class="h-full flex items-center justify-center">
+
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login Perpustakaan</h2>
+    
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Username / ID</label>
+        <input type="text" id="username" class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="password" class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+        Masuk
+      </button>
+    </form>
+  </div>
+  
+  <script src="JS/login.js"></script>
+  <script>
+    // Cek jika sudah login, langsung lempar ke halaman utama
+    if (localStorage.getItem('currentUser')) {
+        window.location.href = 'index.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // ... (Masukkan logika verifikasi SDK/Backend Anda di sini) ...
+      
+      // Contoh simulasi jika login BERHASIL:
+      const dummyUser = { id: 1, name: "Admin Perpus", role: "Admin" };
+      
+      // 1. Simpan sesi ke localStorage
+      localStorage.setItem('currentUser', JSON.stringify(dummyUser));
+      
+      // 2. Alihkan ke halaman utama
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
