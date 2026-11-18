@@ -1,99 +1,195 @@
 // JS/dashboard.js
 
-// 1. Gambar Kerangka Utama (Sidebar, Header, Container Konten)
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+}
+
+function renderSidebarNav() {
+    const menuItems = [
+        { key: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+        { key: 'books', label: 'Data Buku', icon: 'book' },
+        { key: 'members', label: 'Data Anggota', icon: 'users' },
+        { key: 'loans', label: 'Sirkulasi', icon: 'arrow-right-left' },
+        { key: 'visitors', label: 'Buku Tamu', icon: 'book-open' },
+        { key: 'reports', label: 'Laporan', icon: 'bar-chart-3' },
+        { key: 'users', label: 'Manajemen User', icon: 'shield-check' },
+        { key: 'settings', label: 'Pengaturan', icon: 'settings' }
+    ];
+
+    return menuItems
+        .filter(item => canAccessMenu(item.key))
+        .map(item => {
+            const isActive = appState.currentSection === item.key;
+            const activeClass = isActive ? 'active bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600';
+            return `
+                <button data-menu="${item.key}" onclick="navigateTo('${item.key}'); if(window.innerWidth < 768) toggleMobileSidebar();" 
+                    class="sidebar-item flex items-center gap-3 w-full text-left px-3.5 py-2.5 rounded-xl transition-all ${activeClass}">
+                    <i data-lucide="${item.icon}" class="menu-icon w-5 h-5"></i>
+                    <span>${item.label}</span>
+                </button>
+            `;
+        }).join('');
+}
+
 function renderDashboard() {
+    const user = window.loggedInUser || {};
+    const roleLabel = (user.role || 'petugas').toUpperCase();
+
     return `
-    <div class="flex h-screen bg-gray-50 overflow-hidden">
+    <div class="flex h-screen bg-gray-50 overflow-hidden relative">
         
-        <!-- SIDEBAR (Menu Kiri) -->
-        <aside class="w-64 bg-white border-r flex-shrink-0 hidden md:flex md:flex-col shadow-sm">
-            <div class="p-6 border-b flex items-center gap-3">
-                <i data-lucide="library" class="w-7 h-7 text-blue-600"></i>
-                <h2 class="text-xl font-bold text-gray-800">PerpusWeb</h2>
+        <!-- OVERLAY MOBILE -->
+        <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black bg-opacity-40 z-20 hidden md:hidden"></div>
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="glass-sidebar fixed md:static inset-y-0 left-0 z-30 w-64 bg-white border-r flex-shrink-0 flex flex-col shadow-sm transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="p-5 border-b flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl text-white" style="background-color: var(--primary-color, #2563eb);">
+                        <i data-lucide="library" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 id="sidebarLibName" class="text-lg font-bold text-gray-800 leading-tight">${defaultConfig.libraryName}</h2>
+                        <p class="text-[11px] text-gray-400 truncate max-w-[140px]">${defaultConfig.librarySubtitle}</p>
+                    </div>
+                </div>
+                <button onclick="toggleMobileSidebar()" class="md:hidden text-gray-500 hover:text-gray-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
-                <button onclick="navigateTo('dashboard')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-                </button>
-                <button onclick="navigateTo('books')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                    <i data-lucide="book" class="w-5 h-5"></i> Data Buku
-                </button>
-                <button onclick="navigateTo('members')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                    <i data-lucide="users" class="w-5 h-5"></i> Data Anggota
-                </button>
-                <button onclick="navigateTo('loans')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                <i data-lucide="book-up" class="w-5 h-5"></i> Sirkulasi
-                     </button>
-                <button onclick="navigateTo('visitors')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                    <i data-lucide="book-open" class="w-5 h-5"></i> Buku Tamu
-                </button>
-                <button onclick="navigateTo('settings')" class="flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                    <i data-lucide="settings" class="w-5 h-5"></i> Pengaturan
-                </button>
-                <!-- Tambahkan menu transaksi, tamu, dll di sini nanti -->
+
+            <nav id="sidebarNav" class="p-4 space-y-1.5 flex-1 overflow-y-auto">
+                ${renderSidebarNav()}
             </nav>
+
+            <div class="p-4 border-t bg-gray-50/70">
+                <div class="text-xs text-gray-500 flex items-center justify-between">
+                    <span>Hak Akses:</span>
+                    <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">${roleLabel}</span>
+                </div>
+            </div>
         </aside>
 
-        <!-- AREA KANAN (Header & Konten Utama) -->
+        <!-- AREA KANAN -->
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
             
             <!-- HEADER -->
-            <header class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-10">
-                <h1 class="text-xl font-semibold text-gray-800 hidden sm:block">Sistem Perpustakaan</h1>
-                <div class="flex items-center gap-4 ml-auto">
+            <header class="bg-white border-b px-4 md:px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h1 class="text-lg md:text-xl font-semibold text-gray-800">${defaultConfig.librarySubtitle}</h1>
+                </div>
+
+                <div class="flex items-center gap-3 ml-auto">
+                    <button onclick="refreshDataFromServer()" title="Sinkronkan Data" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
                     <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full">
                         <i data-lucide="user" class="w-4 h-4 text-gray-600"></i>
                         <span id="userNameDisplay" class="text-sm font-medium text-gray-700">Loading...</span>
                     </div>
-                    <button onclick="logout()" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2">
+                    <button onclick="logout()" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1.5">
                         <i data-lucide="log-out" class="w-5 h-5"></i>
                         <span class="hidden sm:block text-sm font-medium">Keluar</span>
                     </button>
                 </div>
             </header>
 
-            <!-- KONTEN DINAMIS (Wajib ID mainContent) -->
+            <!-- KONTEN DINAMIS -->
             <main class="flex-1 overflow-auto p-4 md:p-6" id="mainContent">
-                <!-- main.js akan menyuntikkan HTML halaman ke sini -->
             </main>
         </div>
     </div>
     `;
 }
 
-// 2. Gambar Halaman Beranda (Statistik)
 function renderDashboardHome() {
-    // Ambil data dari state untuk dihitung (fungsi getRecordsByType ada di script.js)
-    const totalBuku = getRecordsByType('book').length;
-    const totalAnggota = getRecordsByType('member').length;
-    
+    const books = getRecordsByType('book');
+    const members = getRecordsByType('member');
+    const loans = getRecordsByType('loan');
+    const visitors = getRecordsByType('visitor');
+
+    // Hitung peminjaman aktif & terlambat
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeLoans = loans.filter(l => {
+        const st = (l.loanStatus || l.status || '').toLowerCase();
+        return st !== 'dikembalikan' && st !== 'returned';
+    });
+
+    const overdueLoans = activeLoans.filter(l => {
+        if (!l.loanDueDate) return false;
+        const due = new Date(l.loanDueDate);
+        due.setHours(0, 0, 0, 0);
+        return due < today;
+    });
+
+    // Hitung pengunjung hari ini
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayVisitors = visitors.filter(v => {
+        const rawDate = v.visitorCheckIn || v.visitDate || v.date || '';
+        return rawDate.startsWith(todayStr);
+    });
+
     return `
         <div class="space-y-6">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
-                <p class="text-gray-500 mt-1">Ringkasan sistem perpustakaan Anda hari ini.</p>
+                <p class="text-gray-500 mt-1">Ringkasan operasional perpustakaan hari ini.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card Total Buku -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div class="p-4 bg-blue-100 rounded-lg text-blue-600">
-                        <i data-lucide="book" class="w-8 h-8"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Total Buku -->
+                <div class="card bg-white p-5 flex items-center gap-4">
+                    <div class="p-3.5 bg-blue-100 rounded-xl text-blue-600">
+                        <i data-lucide="book" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Total Buku</p>
-                        <p class="text-2xl font-bold text-gray-800">${totalBuku}</p>
+                        <p class="text-sm font-medium text-gray-500">Total Judul Buku</p>
+                        <p class="text-2xl font-bold text-gray-800">${books.length}</p>
                     </div>
                 </div>
                 
-                <!-- Card Total Anggota -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div class="p-4 bg-green-100 rounded-lg text-green-600">
-                        <i data-lucide="users" class="w-8 h-8"></i>
+                <!-- Total Anggota -->
+                <div class="card bg-white p-5 flex items-center gap-4">
+                    <div class="p-3.5 bg-emerald-100 rounded-xl text-emerald-600">
+                        <i data-lucide="users" class="w-7 h-7"></i>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Total Anggota</p>
-                        <p class="text-2xl font-bold text-gray-800">${totalAnggota}</p>
+                        <p class="text-2xl font-bold text-gray-800">${members.length}</p>
+                    </div>
+                </div>
+
+                <!-- Peminjaman Aktif -->
+                <div class="card bg-white p-5 flex items-center gap-4">
+                    <div class="p-3.5 bg-amber-100 rounded-xl text-amber-600">
+                        <i data-lucide="book-up" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Sedang Dipinjam</p>
+                        <p class="text-2xl font-bold text-gray-800">${activeLoans.length}</p>
+                        ${overdueLoans.length > 0 ? `<p class="text-xs text-red-600 font-medium mt-0.5">${overdueLoans.length} terlambat</p>` : ''}
+                    </div>
+                </div>
+
+                <!-- Pengunjung Hari Ini -->
+                <div class="card bg-white p-5 flex items-center gap-4">
+                    <div class="p-3.5 bg-purple-100 rounded-xl text-purple-600">
+                        <i data-lucide="user-check" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Pengunjung Hari Ini</p>
+                        <p class="text-2xl font-bold text-gray-800">${todayVisitors.length}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Total: ${visitors.length} kunjungan</p>
                     </div>
                 </div>
             </div>

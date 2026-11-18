@@ -9,10 +9,8 @@
   <script>
     const savedUser = localStorage.getItem('currentUser');
     if (!savedUser) {
-        // Jika belum login, tendang ke halaman login
         window.location.href = 'login.html';
     } else {
-        // Jika sudah login, siapkan variabel untuk script.js
         window.loggedInUser = JSON.parse(savedUser);
     }
   </script>
@@ -22,42 +20,37 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
   
-  <!-- 3. CSS -->
+  <!-- 3. CSS & Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="CSS/style.css">
-  
-  <!-- 4. Setup Backend SDK (Biarkan ini seperti kode asli Anda) -->
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwnRb6cqYz0yJ1oDzIHqwLZiSU77KCc1BJ8az07iA9xbjbti5m13q9EaY-veLwkah5f/exec";
-    // ... (Masukkan inisialisasi window.dataSdk Anda di sini) ...
-  </script>
-
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
 </head>
 <body class="h-full bg-gray-50">
   
-  <!-- 5. WADAH UTAMA APLIKASI (Jangan diisi HTML lain, biarkan script.js yang merender UI ke sini) -->
+  <!-- WADAH UTAMA APLIKASI -->
   <div id="app" class="h-full w-full"></div>
   
-  <!-- 6. PEMANGGILAN JAVASCRIPT SESUAI FOLDER -->
-  <!-- Script inti (Data & Utilitas) harus pertama -->
+  <!-- 1. Script Inti (State & Utilitas) -->
   <script src="JS/script.js"></script>
 
-  <!-- Panggil semua modul fitur di sini -->
+  <!-- 2. Kurir API Google Apps Script -->
+  <script src="JS/api.js"></script>
+
+  <!-- 3. Modul Fitur Utama -->
   <script src="JS/dashboard.js"></script>
   <script src="JS/buku.js"></script>
   <script src="JS/anggota.js"></script>
   <script src="JS/transaksi.js"></script>
   <script src="JS/tamu_laporan.js"></script>
   <script src="JS/pengaturan.js"></script>
-
-  <!-- SANG KURIR DATA -->
-  <script src="JS/api.js"></script>
   
-  <!-- Modul tambahan Anda -->
+  <!-- 4. Modul Pendukung -->
   <script src="JS/cetakkartu.js"></script>
   <script src="JS/pencarian.js"></script>
   
-  <!-- main.js (Inisialisasi & Router) SELALU paling bawah -->
+  <!-- 5. Inisialisasi & Router (Selalu paling bawah) -->
   <script src="JS/main.js"></script>
 </body>
 </html>
