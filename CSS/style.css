@@ -14,8 +14,9 @@ body.print-body {
 }
 
 .member-card { 
-  width: 400px; 
-  height: 220px; 
+  width: 100%;
+  max-width: 400px; 
+  min-height: 220px; 
   background: white;
   border-radius: 12px; 
   padding: 20px; 
@@ -35,7 +36,7 @@ body.print-body {
   left: 0;
   width: 100%;
   height: 5px;
-  background: #3b82f6; 
+  background: #43489e; 
 }
 
 .card-header { 
@@ -88,23 +89,22 @@ body.print-body {
   }
   .cards-wrapper {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Memaksa layout menjadi 2 kolom */
-    gap: 10px; /* Jarak antar kartu */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     justify-content: center;
   }
   .member-card { 
     width: 100%;
-    max-width: 9.5cm; /* Lebar ideal untuk 2 kolom di A4 */
+    max-width: 9.5cm;
     height: auto;
     min-height: 5.5cm;
     padding: 15px;
     box-shadow: none; 
-    border: 1px dashed #000; /* Garis putus-putus agar mudah digunting */
-    border-radius: 0; /* Sudut kotak untuk cetak fisik */
+    border: 1px dashed #000;
+    border-radius: 0;
     margin: 0 auto;
   }
   
-  /* Menyesuaikan teks agar proporsional di ukuran kartu yang dicetak */
   .card-header h2 { font-size: 14px; }
   .card-header p { font-size: 9px; }
   .card-content { font-size: 12px; line-height: 1.5; }
@@ -112,57 +112,128 @@ body.print-body {
   .card-footer { font-size: 9px; bottom: 10px; right: 15px; }
 
   @page {
-    size: A4 portrait; /* Standar ukuran kertas */
+    size: A4 portrait;
     margin: 1cm;
   }
 }
 
-/* Tambahan CSS UI Modern */
-body {
-  background-color: #f8fafc; /* Warna latar belakang modern yang lebih bersih */
+/* ==========================================
+   UI MODERN & SMARTPHONE-FRIENDLY
+   ========================================== */
+
+html, body {
+  height: 100dvh;
+  background-color: #e9eef8;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.glass-sidebar {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(226, 232, 240, 0.8);
+/* Transisi halus sidebar dinamis */
+#sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease-in-out;
 }
 
 .sidebar-item {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-item:hover:not(.active) {
-  background: rgba(59, 130, 246, 0.08);
-  transform: translateX(4px);
-}
-
+/* Tab aktif menyatu dengan latar konten di desktop */
 .sidebar-item.active {
-  background: var(--primary-color, #2563eb);
-  color: white !important;
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  background-color: #f4f6fc !important;
+  color: #4338ca !important;
   font-weight: 600;
-}
-
-.sidebar-item.active .menu-icon {
-  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(20, 25, 60, 0.08);
 }
 
 .card {
-  border-radius: 16px;
+  border-radius: 1.25rem;
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
-/* Transisi halus untuk sidebar */
-#sidebar {
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease-in-out;
+/* Scroll tabel responsif & halus di layar sentuh */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 5px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(67, 72, 158, 0.25);
+  border-radius: 9999px;
+}
+
+/* Penyesuaian khusus layar Smartphone (< 768px) */
+@media (max-width: 767px) {
+  body.print-body {
+    padding: 10px;
+  }
+
+  .member-card {
+    padding: 14px;
+    min-height: 195px;
+  }
+
+  .card-content strong {
+    width: 92px;
+  }
+
+  /* Netralkan tab menjorok ke kanan saat drawer sidebar dibuka di HP */
+  #sidebar .sidebar-item,
+  #sidebar .sidebar-item.active {
+    margin-right: 0 !important;
+    padding-right: 0.875rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Mencegah layar HP auto-zoom saat kolom input/select diklik */
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="date"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modal popup pas layar HP & bisa di-scroll saat keyboard muncul */
+  #modalContainer > div,
+  .modal-content {
+    width: 94vw !important;
+    max-height: 88dvh !important;
+    overflow-y: auto !important;
+    margin: auto;
+    border-radius: 1.25rem !important;
+  }
+
+  #mainContent {
+    padding: 0.875rem !important;
+  }
+
+  #mainContent .rounded-3xl {
+    border-radius: 1.25rem;
+  }
+}
+
+/* Target sentuh tombol lebih nyaman untuk jari di layar sentuh */
+@media (pointer: coarse) {
+  table button,
+  table a {
+    min-height: 36px;
+    min-width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
