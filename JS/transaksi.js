@@ -330,6 +330,8 @@ async function saveLoan(event) {
     const result = await window.dataSdk.sendData('create', newLoan);
 
     if (result && result.success) {
+        if (result.__backendId) newLoan.__backendId = result.__backendId;
+        if (result.id) newLoan.id = result.id;
         appState.allRecords.push(newLoan);
 
         if (bookRecord && bookRecord.bookStock !== undefined) {
@@ -339,16 +341,21 @@ async function saveLoan(event) {
             }
         }
 
+        // Otomatis Check-In ke Buku Tamu
+        const autoCheckedIn = typeof autoCheckInVisitorFromLoan === 'function'
+            ? await autoCheckInVisitorFromLoan(peminjam, judulFinal, newLoan.timestamp)
+            : false;
+
         closeModal();
-        showToast("Peminjaman berhasil disimpan!", "success");
+        showToast(
+            autoCheckedIn
+                ? "Peminjaman disimpan & Otomatis Check-In ke Buku Tamu!"
+                : "Peminjaman berhasil disimpan!",
+            "success"
+        );
         renderCurrentSection();
-    } else {
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
-        showToast("Gagal mencatat peminjaman", "error");
     }
 }
-
 // =========================================================================
 // FITUR EDIT DATA PEMINJAMAN
 // =========================================================================
@@ -466,22 +473,35 @@ async function handleEditLoanSubmit(event, backendId) {
             (record.__backendId === backendId || record.id === backendId) ? updatedLoan : record
         );
 
-        // Jika masih dipinjam dan jumlah buku berubah, sesuaikan stok buku di katalog
-        if (!isReturned && oldQty !== newQty) {
-            const bookRecord = appState.allRecords.find(b => b.type === 'book' && (b.bookBarcode === newBarcode || b.id === newBarcode));
+        // Kembalikan stok buku sesuai jumlah yang dipinjam (kecuali jika kondisi 'Hilang')
+        if (condition !== 'Hilang') {
+            const kodeBuku = loan.loanBarcode;
+            const bookRecord = appState.allRecords.find(b => b.type === 'book' && (b.bookBarcode === kodeBuku || b.id === kodeBuku));
             if (bookRecord && bookRecord.bookStock !== undefined) {
-                const diff = newQty - oldQty;
-                bookRecord.bookStock = Math.max(0, Number(bookRecord.bookStock) - diff);
+                bookRecord.bookStock = Number(bookRecord.bookStock) + qty;
                 if (bookRecord.__backendId) {
                     await window.dataSdk.sendData('update', bookRecord);
                 }
             }
         }
 
-        showToast("Data peminjaman berhasil diperbarui!", "success");
+        // Otomatis Check-Out dari Buku Tamu
+        const peminjamName = loan.loanMember || loan.memberName || '';
+        const autoCheckedOut = typeof autoCheckOutVisitorFromReturn === 'function'
+            ? await autoCheckOutVisitorFromReturn(peminjamName, updatedLoan.returnDate)
+            : false;
+
+        const baseMsg = fineAmount > 0
+            ? `Buku dikembalikan (${condition}) • Denda: ${formatRupiah(fineAmount)}`
+            : `Buku berhasil dikembalikan (Kondisi: ${condition})!`;
+
+        showToast(
+            autoCheckedOut
+                ? `${baseMsg} & Otomatis Check-Out Buku Tamu!`
+                : baseMsg,
+            "success"
+        );
         renderCurrentSection();
-    } else {
-        showToast("Gagal memperbarui data peminjaman", "error");
     }
 }
 
