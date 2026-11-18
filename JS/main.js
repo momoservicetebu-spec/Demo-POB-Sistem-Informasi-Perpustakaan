@@ -25,6 +25,7 @@ function renderCurrentSection() {
         case 'loans': content.innerHTML = renderCirculationSection(); break;
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
         case 'reports': content.innerHTML = typeof renderReportsSection === 'function' ? renderReportsSection() : '<div class="p-6 text-gray-500">Modul Laporan siap diisi di Tahap 3.</div>'; break;
+        case 'statistics': content.innerHTML = typeof renderStatisticsSection === 'function' ? renderStatisticsSection() : '<div class="p-6 text-gray-500">Modul Statistik belum dimuat.</div>'; break;
         case 'users': content.innerHTML = typeof renderUsersSection === 'function' ? renderUsersSection() : '<div class="p-6 text-gray-500">Modul Manajemen User siap diisi di Tahap 3.</div>'; break;
         case 'settings': content.innerHTML = renderSettingsSection(); break;
         default:
@@ -44,6 +45,7 @@ function navigateTo(section) {
         loans: 'Memuat Sirkulasi Peminjaman...',
         visitors: 'Memuat Buku Tamu...',
         reports: 'Menyiapkan Laporan & Statistik...',
+        statistics: 'Memuat Statistik & Reward Literasi...',
         users: 'Memuat Manajemen User...',
         settings: 'Membuka Pengaturan Sistem...'
     };

@@ -133,7 +133,7 @@ function canAccessMenu(menuKey) {
 
     if (role === 'admin') return true;
     if (role === 'kasir' || role === 'kasir buku') {
-        return ['dashboard', 'books', 'members', 'loans'].includes(menuKey);
+        return ['dashboard', 'books', 'members', 'loans', 'statistics'].includes(menuKey);
     }
     return !['users', 'settings'].includes(menuKey);
 }

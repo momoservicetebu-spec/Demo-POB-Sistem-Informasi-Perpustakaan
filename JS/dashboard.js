@@ -70,6 +70,7 @@ function renderSidebarNav() {
         { key: 'loans', label: 'Sirkulasi', icon: 'arrow-left-right' },
         { key: 'visitors', label: 'Buku Tamu', icon: 'clipboard-check' },
         { key: 'reports', label: 'Laporan', icon: 'bar-chart-3' },
+        { key: 'statistics', label: 'Statistik', icon: 'trending-up' },
         { key: 'users', label: 'Manajemen User', icon: 'shield-check' },
         { key: 'settings', label: 'Pengaturan', icon: 'settings' }
     ];
