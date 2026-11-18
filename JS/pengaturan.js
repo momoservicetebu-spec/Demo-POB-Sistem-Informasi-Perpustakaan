@@ -1,9 +1,5 @@
 // JS/pengaturan.js
 
-// ==========================================
-// 1. PENGATURAN SISTEM (SETTINGS)
-// ==========================================
-
 function renderSettingsSection() {
     const savedSettings = JSON.parse(localStorage.getItem('librarySettings') || '{}');
     const libName = savedSettings.libraryName || defaultConfig.libraryName || 'PerpusWeb';
@@ -12,11 +8,17 @@ function renderSettingsSection() {
     const denda = savedSettings.finePerDay !== undefined ? savedSettings.finePerDay : (defaultConfig.finePerDay || 1000);
     const maksHari = savedSettings.maxLoanDays || defaultConfig.maxLoanDays || 7;
 
+    // Data Kop Sekolah
+    const kopHeader1 = savedSettings.kopHeader1 || defaultConfig.kopHeader1 || 'PEMERINTAH PROVINSI LAMPUNG\nDINAS PENDIDIKAN DAN KEBUDAYAAN';
+    const kopSchoolName = savedSettings.kopSchoolName || defaultConfig.kopSchoolName || 'SMKN 1 BARADATU';
+    const kopAddress = savedSettings.kopAddress || defaultConfig.kopAddress || 'Jl. Pendidikan No. 1, Baradatu, Kab. Way Kanan, Lampung';
+    const kopContact = savedSettings.kopContact || defaultConfig.kopContact || 'Website: www.sekolah.sch.id | Email: perpus@sekolah.sch.id';
+
     return `
         <div class="space-y-6 max-w-4xl">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">Pengaturan Sistem</h2>
-                <p class="text-gray-500 text-sm">Atur identitas perpustakaan, aturan sirkulasi, serta backup & restore data.</p>
+                <p class="text-gray-500 text-sm">Atur identitas perpustakaan, kop surat sekolah, aturan sirkulasi, serta backup & restore data.</p>
             </div>
 
             <form onsubmit="saveSettings(event)" class="space-y-6">
@@ -38,6 +40,51 @@ function renderSettingsSection() {
                         <div class="flex items-center gap-3">
                             <input type="color" id="settingPrimaryColor" value="${primaryColor}" class="h-10 w-16 p-1 border rounded-lg cursor-pointer">
                             <span class="text-xs text-gray-500">Pilih warna aksen sidebar & tombol utama</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PENGATURAN KOP SEKOLAH -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <span>🏫</span> Pengaturan Kop Sekolah (Cetak Laporan & Kartu)
+                        </h3>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Header Instansi / Dinas / Yayasan (Baris Atas)</label>
+                            <textarea id="settingKopHeader1" rows="2" placeholder="Contoh: PEMERINTAH PROVINSI LAMPUNG&#10;DINAS PENDIDIKAN DAN KEBUDAYAAN" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">${kopHeader1}</textarea>
+                            <p class="text-[11px] text-gray-400 mt-1">Gunakan Enter jika ingin membagi menjadi 2 baris pada kop surat.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Sekolah / Lembaga *</label>
+                            <input type="text" id="settingKopSchoolName" value="${kopSchoolName}" required placeholder="Contoh: SMK NEGERI 1 BARADATU" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-semibold">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap Sekolah</label>
+                                <input type="text" id="settingKopAddress" value="${kopAddress}" placeholder="Jl. Raya..." class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kontak / Website / NPSN</label>
+                                <input type="text" id="settingKopContact" value="${kopContact}" placeholder="Telp / Email / Website" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Pratinjau Kop Sekolah -->
+                        <div class="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-300">
+                            <p class="text-[11px] font-semibold text-gray-400 uppercase mb-2">Pratinjau Tampilan Kop Cetak:</p>
+                            <div class="bg-white p-4 rounded-lg border text-center space-y-0.5">
+                                <p class="text-xs font-semibold text-gray-700 whitespace-pre-line uppercase">${kopHeader1}</p>
+                                <p class="text-base font-bold text-gray-900 uppercase">${kopSchoolName}</p>
+                                <p class="text-xs text-gray-600">${kopAddress}</p>
+                                <p class="text-[11px] text-gray-500">${kopContact}</p>
+                                <div class="border-b-2 border-gray-800 pt-2"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -75,7 +122,7 @@ function renderSettingsSection() {
                 </div>
             </form>
 
-            <!-- PANEL BACKUP, EXPORT & IMPORT DATA (SESUAI DESAIN LAMA) -->
+            <!-- PANEL BACKUP, EXPORT & IMPORT DATA -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -84,7 +131,6 @@ function renderSettingsSection() {
                     <p class="text-sm text-gray-500 mt-1">Kelola data sistem secara massal dari sini.</p>
                 </div>
 
-                <!-- Baris 1: Export CSV & Backup JSON -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button type="button" onclick="exportAllDataCSV()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-colors">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Semua Data (CSV)
@@ -94,7 +140,6 @@ function renderSettingsSection() {
                     </button>
                 </div>
 
-                <!-- Baris 2: Impor Data Buku -->
                 <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-3">
                     <div>
                         <h4 class="font-bold text-emerald-800 text-sm flex items-center gap-2">
@@ -114,7 +159,6 @@ function renderSettingsSection() {
                     <div id="settingsBookImportStatus" class="hidden text-xs font-medium text-emerald-800"></div>
                 </div>
 
-                <!-- Baris 3: Impor Data Anggota -->
                 <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
                     <div>
                         <h4 class="font-bold text-blue-800 text-sm flex items-center gap-2">
@@ -134,7 +178,6 @@ function renderSettingsSection() {
                     <div id="settingsMemberImportStatus" class="hidden text-xs font-medium text-blue-800"></div>
                 </div>
 
-                <!-- Baris 4: Restore JSON -->
                 <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
                     <div>
                         <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
@@ -152,6 +195,58 @@ function renderSettingsSection() {
     `;
 }
 
+async function saveSettings(event) {
+    event.preventDefault();
+
+    const btn = document.getElementById('btnSaveSettings');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Menyimpan...";
+    }
+
+    const settings = {
+        libraryName: document.getElementById('settingLibName').value.trim() || 'PerpusWeb',
+        librarySubtitle: document.getElementById('settingLibSub').value.trim() || 'Sistem Informasi Perpustakaan',
+        primaryColor: document.getElementById('settingPrimaryColor').value || '#2563eb',
+        kopHeader1: document.getElementById('settingKopHeader1').value.trim(),
+        kopSchoolName: document.getElementById('settingKopSchoolName').value.trim() || 'SMKN 1 BARADATU',
+        kopAddress: document.getElementById('settingKopAddress').value.trim(),
+        kopContact: document.getElementById('settingKopContact').value.trim(),
+        maxLoanDays: parseInt(document.getElementById('settingMaxDays').value) || 7,
+        finePerDay: parseInt(document.getElementById('settingFine').value) || 0,
+        type: 'setting'
+    };
+
+    localStorage.setItem('librarySettings', JSON.stringify(settings));
+    Object.assign(defaultConfig, settings);
+    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+
+    const sidebarTitle = document.getElementById('sidebarLibName');
+    if (sidebarTitle) sidebarTitle.textContent = settings.libraryName;
+
+    try {
+        const existingSetting = appState.allRecords.find(r => r.type === 'setting');
+        if (existingSetting && existingSetting.__backendId) {
+            const payload = { ...existingSetting, ...settings };
+            await window.dataSdk.sendData('update', payload);
+        } else {
+            const res = await window.dataSdk.sendData('create', settings);
+            if (res && res.success) {
+                appState.allRecords.push(settings);
+            }
+        }
+    } catch (e) {
+        console.warn("Pengaturan tersimpan lokal, gagal sinkron ke server:", e);
+    }
+
+    if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Simpan Semua Pengaturan";
+    }
+    showToast("Pengaturan & Kop Sekolah berhasil disimpan!", "success");
+    renderCurrentSection();
+}
+
 // --- FUNGSI BACKUP, EXPORT, IMPORT & RESTORE ---
 
 function exportAllDataCSV() {
@@ -159,7 +254,6 @@ function exportAllDataCSV() {
         showToast("Belum ada data di sistem untuk diexport.", "error");
         return;
     }
-
     const ws = XLSX.utils.json_to_sheet(appState.allRecords);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Semua Data");
@@ -173,14 +267,12 @@ function backupAllDataJSON() {
         showToast("Belum ada data untuk dibackup.", "error");
         return;
     }
-
     const backupPayload = {
         appName: defaultConfig.libraryName || "PerpusWeb",
         exportedAt: new Date().toISOString(),
         totalRecords: appState.allRecords.length,
         records: appState.allRecords
     };
-
     const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -343,7 +435,7 @@ function handleRestoreJSON(inputEl) {
             let restoredCount = 0;
             for (let i = 0; i < recordsToRestore.length; i++) {
                 const item = { ...recordsToRestore[i] };
-                delete item.__backendId; // Biarkan backend membuat ID baru agar tidak bentrok
+                delete item.__backendId;
                 if (!item.type) continue;
 
                 if (statusEl) {
@@ -369,52 +461,3 @@ function handleRestoreJSON(inputEl) {
     };
     reader.readAsText(file);
 }
-
-async function saveSettings(event) {
-    event.preventDefault();
-
-    const btn = document.getElementById('btnSaveSettings');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = "Menyimpan...";
-    }
-
-    const settings = {
-        libraryName: document.getElementById('settingLibName').value.trim() || 'PerpusWeb',
-        librarySubtitle: document.getElementById('settingLibSub').value.trim() || 'Sistem Informasi Perpustakaan',
-        primaryColor: document.getElementById('settingPrimaryColor').value || '#2563eb',
-        maxLoanDays: parseInt(document.getElementById('settingMaxDays').value) || 7,
-        finePerDay: parseInt(document.getElementById('settingFine').value) || 0,
-        type: 'setting'
-    };
-
-    localStorage.setItem('librarySettings', JSON.stringify(settings));
-    Object.assign(defaultConfig, settings);
-    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-
-    const sidebarTitle = document.getElementById('sidebarLibName');
-    if (sidebarTitle) sidebarTitle.textContent = settings.libraryName;
-
-    try {
-        const existingSetting = appState.allRecords.find(r => r.type === 'setting');
-        if (existingSetting && existingSetting.__backendId) {
-            const payload = { ...existingSetting, ...settings };
-            await window.dataSdk.sendData('update', payload);
-        } else {
-            const res = await window.dataSdk.sendData('create', settings);
-            if (res && res.success) {
-                appState.allRecords.push(settings);
-            }
-        }
-    } catch (e) {
-        console.warn("Pengaturan tersimpan lokal, gagal sinkron ke server:", e);
-    }
-
-    if (btn) {
-        btn.disabled = false;
-        btn.innerText = "Simpan Semua Pengaturan";
-    }
-    showToast("Pengaturan berhasil disimpan!", "success");
-    renderCurrentSection();
-}
-
