@@ -4,65 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Perpustakaan</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="CSS/style.css">
   
-  <!-- PENJAGA KEAMANAN HALAMAN -->
+  <!-- 1. PENJAGA KEAMANAN HALAMAN (GATEKEEPER) -->
   <script>
-    // 1. Cek apakah ada data user di localStorage
     const savedUser = localStorage.getItem('currentUser');
-    
-    // 2. Jika tidak ada, tendang kembali ke halaman login
     if (!savedUser) {
+        // Jika belum login, tendang ke halaman login
         window.location.href = 'login.html';
     } else {
-        // Jika ada, simpan ke variabel global untuk digunakan di aplikasi
-        window.currentUser = JSON.stringify(savedUser);
+        // Jika sudah login, siapkan variabel untuk script.js
+        window.loggedInUser = JSON.parse(savedUser);
     }
   </script>
+
+  <!-- 2. SDK & Library -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  
+  <!-- 3. CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/style.css">
+  
+  <!-- 4. Setup Backend SDK (Biarkan ini seperti kode asli Anda) -->
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwnRb6cqYz0yJ1oDzIHqwLZiSU77KCc1BJ8az07iA9xbjbti5m13q9EaY-veLwkah5f/exec";
+    // ... (Masukkan inisialisasi window.dataSdk Anda di sini) ...
+  </script>
+
 </head>
-<body class="h-full bg-gray-50 flex">
-
-  <!-- SIDEBAR -->
-  <aside class="w-64 bg-blue-800 text-white h-full p-4">
-    <h1 class="text-xl font-bold mb-8">Perpustakaan</h1>
-    <nav class="space-y-2">
-      <a href="#" class="block py-2 px-4 bg-blue-700 rounded">Dashboard</a>
-      <a href="#" class="block py-2 px-4 hover:bg-blue-700 rounded">Buku</a>
-    </nav>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="flex-1 p-8 flex flex-col">
-    <header class="flex justify-between items-center border-b pb-4 mb-4">
-      <h2 class="text-2xl font-semibold">Selamat Datang, <span id="userNameDisplay"></span></h2>
-      
-      <!-- TOMBOL LOGOUT -->
-      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-    </header>
-    
-    <div id="content">
-      <!-- Konten Dashboard Anda di sini -->
-    </div>
-  </main>
-
-  <!-- SCRIPT HALAMAN UTAMA -->
+<body class="h-full bg-gray-50">
+  
+  <!-- 5. WADAH UTAMA APLIKASI (Jangan diisi HTML lain, biarkan script.js yang merender UI ke sini) -->
+  <div id="app" class="h-full w-full"></div>
+  
+  <!-- 6. PEMANGGILAN JAVASCRIPT SESUAI FOLDER -->
   <script src="JS/script.js"></script>
-  <script src="JS/main.js"></script>
   <script src="JS/cetakkartu.js"></script>
   <script src="JS/pencarian.js"></script>
-  <script>
-    // Tampilkan nama user dari localStorage
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    document.getElementById('userNameDisplay').innerText = user.name;
-
-    // Fungsi Logout
-    function logout() {
-        // Hapus data sesi dari localStorage
-        localStorage.removeItem('currentUser');
-        // Alihkan kembali ke halaman login
-        window.location.href = 'login.html';
-    }
-  </script>
+  <script src="JS/main.js"></script>
 </body>
 </html>
