@@ -21,6 +21,7 @@ function renderCurrentSection() {
     switch (appState.currentSection) {
         case 'dashboard': content.innerHTML = renderDashboardHome(); break;
         case 'books': content.innerHTML = renderBooksSection(); break;
+        case 'catalog_ddc': content.innerHTML = renderCatalogDdcSection(); break;
         case 'members': content.innerHTML = renderMembersSection(); break;
         case 'loans': content.innerHTML = renderCirculationSection(); break;
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
@@ -42,6 +43,7 @@ function navigateTo(section) {
     const sectionTitles = {
         dashboard: 'Membuka Dashboard...',
         books: 'Memuat Katalog Data Buku...',
+        catalog_ddc: 'Memuat Katalog Perpusnas...',
         members: 'Memuat Data Anggota...',
         loans: 'Memuat Sirkulasi Peminjaman...',
         visitors: 'Memuat Buku Tamu...',
