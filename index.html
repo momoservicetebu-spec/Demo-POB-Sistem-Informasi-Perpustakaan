@@ -39,9 +39,25 @@
   <div id="app" class="h-full w-full"></div>
   
   <!-- 6. PEMANGGILAN JAVASCRIPT SESUAI FOLDER -->
+  <!-- Script inti (Data & Utilitas) harus pertama -->
   <script src="JS/script.js"></script>
+
+  <!-- Panggil semua modul fitur di sini -->
+  <script src="JS/dashboard.js"></script>
+  <script src="JS/buku.js"></script>
+  <script src="JS/anggota.js"></script>
+  <script src="JS/transaksi.js"></script>
+  <script src="JS/tamu_laporan.js"></script>
+  <script src="JS/pengaturan.js"></script>
+
+  <!-- SANG KURIR DATA -->
+  <script src="JS/api.js"></script>
+  
+  <!-- Modul tambahan Anda -->
   <script src="JS/cetakkartu.js"></script>
   <script src="JS/pencarian.js"></script>
+  
+  <!-- main.js (Inisialisasi & Router) SELALU paling bawah -->
   <script src="JS/main.js"></script>
 </body>
 </html>

@@ -1,47 +1,82 @@
-// main.js
+// JS/main.js
 
-// 1. Penjaga Keamanan: Cek apakah user sudah login sebelum render konten
-function checkAuth() {
-    const savedUser = localStorage.getItem('currentUser');
-    
-    // Jika tidak ada data sesi, tendang kembali ke halaman login
-    if (!savedUser) {
-        window.location.href = 'login.html';
-        return null;
+// 1. Ambil data user dari variabel global
+const currentUser = window.loggedInUser;
+
+// 2. Fungsi Navigasi & Rendering Konten Tengah
+function renderCurrentSection() {
+    const content = document.getElementById('mainContent');
+    if (!content) return;
+
+    switch(appState.currentSection) {
+        case 'dashboard': content.innerHTML = renderDashboardHome(); break;
+        case 'books': content.innerHTML = renderBooksSection(); break;
+        case 'members': content.innerHTML = renderMembersSection(); break;
+        case 'loans': content.innerHTML = renderLoansSection(); break;
+        case 'visitors': content.innerHTML = renderVisitorsSection(); break;
+        case 'settings': content.innerHTML = renderSettingsSection(); break;
+        default:
+            content.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Halaman sedang dikembangkan.</div>`;
     }
     
-    return JSON.parse(savedUser);
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
-// Jalankan pengecekan auth dan simpan data user
-const currentUser = checkAuth();
+function navigateTo(section) {
+    appState.currentSection = section;
+    renderCurrentSection();
+}
 
-// 2. Inisialisasi Halaman (Jalankan setelah HTML selesai dimuat)
-document.addEventListener('DOMContentLoaded', () => {
-    // Jika auth gagal, hentikan eksekusi script selanjutnya
-    if (!currentUser) return; 
+// 3. Inisialisasi Aplikasi Utama (TERBARU)
+async function initApp() {
+    if (!currentUser) return;
 
-    // Tampilkan nama user di header dashboard
+    const appContainer = document.getElementById('app');
+    
+    // A. Gambar Kerangka Dasar (Sidebar & Header)
+    appContainer.innerHTML = renderDashboard(); 
+
+    // B. Tampilkan nama user
     const userNameDisplay = document.getElementById('userNameDisplay');
     if (userNameDisplay) {
-        userNameDisplay.innerText = currentUser.name;
+        userNameDisplay.innerText = currentUser.name || currentUser.username;
     }
 
-    // Tampilkan role atau info lain (opsional)
-    console.log("Login sebagai:", currentUser.role);
-    
-    // TODO: Panggil fungsi untuk me-render tabel buku, anggota, dll di sini
-    // renderDashboard(); 
-});
+    // C. Tampilkan status loading di konten utama
+    const content = document.getElementById('mainContent');
+    if (content) {
+        content.innerHTML = `<div class="p-8 text-center text-gray-600">Memuat data dari server...</div>`;
+    }
 
-// 3. Fungsi Logout
+    // D. Hubungkan dan muat data dari Google Apps Script melalui api.js
+    try {
+        if (window.dataSdk && typeof window.dataSdk.fetchAll === 'function') {
+            // Tarik data dari GAS
+            const dataDariServer = await window.dataSdk.fetchAll();
+            appState.allRecords = dataDariServer || [];
+            
+            // Render halaman utama setelah data siap
+            renderCurrentSection(); 
+        } else {
+            // Jika api.js belum diload, tetap tampilkan UI (Simulasi)
+            renderCurrentSection(); 
+        }
+    } catch (error) {
+        console.error("Gagal memulai aplikasi:", error);
+        content.innerHTML = `<div class="p-8 text-center text-red-500">Gagal memuat data dari server.</div>`;
+    }
+}
+
+// Jalankan aplikasi saat dokumen siap
+document.addEventListener('DOMContentLoaded', initApp);
+
+// 4. Fungsi Logout
 function logout() {
     const confirmLogout = confirm('Apakah Anda yakin ingin keluar?');
     if (confirmLogout) {
-        // Hapus data sesi dari localStorage
         localStorage.removeItem('currentUser');
-        
-        // Alihkan kembali ke halaman login
         window.location.href = 'login.html';
     }
 }
