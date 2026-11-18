@@ -116,3 +116,53 @@ body.print-body {
     margin: 1cm;
   }
 }
+
+/* Tambahan CSS UI Modern */
+body {
+  background-color: #f8fafc; /* Warna latar belakang modern yang lebih bersih */
+}
+
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.sidebar-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+}
+
+.sidebar-item:hover:not(.active) {
+  background: rgba(59, 130, 246, 0.08);
+  transform: translateX(4px);
+}
+
+.sidebar-item.active {
+  background: var(--primary-color, #2563eb);
+  color: white !important;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  font-weight: 600;
+}
+
+.sidebar-item.active .menu-icon {
+  transform: scale(1.1);
+}
+
+.card {
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* Transisi halus untuk sidebar */
+#sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease-in-out;
+}
