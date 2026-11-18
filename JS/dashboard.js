@@ -18,25 +18,38 @@ function toggleDesktopSidebar() {
     localStorage.setItem('sidebarCollapsed', window.sidebarCollapsed);
 
     const sidebar = document.getElementById('sidebar');
+    const brandHeader = document.getElementById('sidebarBrandHeader');
     const brandText = document.getElementById('sidebarBrandText');
     const footerBadge = document.getElementById('sidebarRoleFooter');
     const labels = document.querySelectorAll('.sidebar-label');
+    const toggleBtn = document.getElementById('sidebarCollapseBtn');
     const toggleIcon = document.getElementById('sidebarCollapseIcon');
 
     if (sidebar) {
-        sidebar.classList.toggle('md:w-64', !window.sidebarCollapsed);
+        sidebar.classList.toggle('md:w-72', !window.sidebarCollapsed);
         sidebar.classList.toggle('md:w-20', window.sidebarCollapsed);
     }
+
+    if (brandHeader) {
+        brandHeader.classList.toggle('md:flex-col', window.sidebarCollapsed);
+        brandHeader.classList.toggle('md:gap-2.5', window.sidebarCollapsed);
+        brandHeader.classList.toggle('justify-between', !window.sidebarCollapsed);
+    }
+
     if (brandText) brandText.classList.toggle('md:hidden', window.sidebarCollapsed);
     if (footerBadge) footerBadge.classList.toggle('md:hidden', window.sidebarCollapsed);
     labels.forEach(el => el.classList.toggle('md:hidden', window.sidebarCollapsed));
+
+    if (toggleBtn) {
+        toggleBtn.classList.toggle('md:w-10', window.sidebarCollapsed);
+        toggleBtn.classList.toggle('md:justify-center', window.sidebarCollapsed);
+    }
 
     if (toggleIcon) {
         toggleIcon.setAttribute('data-lucide', window.sidebarCollapsed ? 'chevrons-right' : 'chevrons-left');
         if (window.lucide) lucide.createIcons();
     }
 }
-
 function renderSidebarNav() {
     const menuItems = [
         { key: 'dashboard', label: 'Dashboard', icon: 'home' },
@@ -85,32 +98,32 @@ function renderDashboard() {
         <!-- SHELL UTAMA ROUNDED -->
         <div class="flex-1 flex bg-[#f4f6fc] md:rounded-3xl shadow-xl overflow-hidden border border-white/80">
 
-            <!-- SIDEBAR DINAMIS BERWARNA INDIGO -->
-            <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-64 ${isSlim ? 'md:w-20' : 'md:w-64'} bg-gradient-to-b from-[#43489e] to-[#343882] text-white flex-shrink-0 flex flex-col transition-all duration-300">
+        <!-- SIDEBAR DINAMIS BERWARNA INDIGO -->
+            <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-72 ${isSlim ? 'md:w-20' : 'md:w-72'} bg-gradient-to-b from-[#43489e] to-[#343882] text-white flex-shrink-0 flex flex-col transition-all duration-300">
                 
                 <!-- Profil / Logo Sekolah di Atas Sidebar -->
-                <div class="p-4 border-b border-white/10 flex items-center justify-between">
+                <div id="sidebarBrandHeader" class="p-4 border-b border-white/10 flex items-center ${isSlim ? 'md:flex-col md:gap-2.5' : 'justify-between'} gap-2">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-11 h-11 rounded-full bg-white p-1.5 flex items-center justify-center flex-shrink-0 shadow">
+                        <div class="w-10 h-10 rounded-full bg-white p-1.5 flex items-center justify-center flex-shrink-0 shadow">
                             <div class="w-full h-full rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
                                 <i data-lucide="library" class="w-5 h-5"></i>
                             </div>
                         </div>
                         <div id="sidebarBrandText" class="min-w-0 ${isSlim ? 'md:hidden' : ''}">
-                            <h2 id="sidebarLibName" class="text-base font-bold text-white leading-tight truncate">${defaultConfig.libraryName}</h2>
-                            <p class="text-[11px] text-indigo-200 truncate">${defaultConfig.librarySubtitle}</p>
+                            <h2 id="sidebarLibName" class="text-sm font-bold text-white leading-snug break-words">${defaultConfig.libraryName}</h2>
+                            <p class="text-[11px] text-indigo-200 leading-tight mt-0.5">${defaultConfig.librarySubtitle}</p>
                         </div>
                     </div>
 
                     <!-- Tombol Collapse Desktop & Close Mobile -->
-                    <button onclick="toggleDesktopSidebar()" title="Perkecil / Perlebar Menu" class="hidden md:flex p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-indigo-100 transition-colors">
+                    <button id="sidebarCollapseBtn" onclick="toggleDesktopSidebar()" title="Perkecil / Perlebar Menu"
+                        class="hidden md:flex items-center justify-center ${isSlim ? 'md:w-10' : ''} p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white flex-shrink-0 transition-colors">
                         <i id="sidebarCollapseIcon" data-lucide="${isSlim ? 'chevrons-right' : 'chevrons-left'}" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="toggleMobileSidebar()" class="md:hidden text-indigo-100 hover:text-white">
+                    <button onclick="toggleMobileSidebar()" class="md:hidden text-indigo-100 hover:text-white flex-shrink-0">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-
                 <!-- Menu Navigasi Dinamis -->
                 <nav id="sidebarNav" class="pl-3 pr-3 py-4 space-y-1.5 flex-1 overflow-y-auto overflow-x-hidden">
                     ${renderSidebarNav()}
