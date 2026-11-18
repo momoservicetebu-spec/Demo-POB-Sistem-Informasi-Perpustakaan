@@ -16,9 +16,8 @@ function renderBooksSection() {
                 <td class="p-3">${book.author || '-'}</td>
                 <td class="p-3">${book.category || '-'}</td>
                 <td class="p-3 text-center">
-                    <button onclick="editBook('${book.id}')" class="text-blue-500 hover:text-blue-700 mx-1 font-medium">Edit</button>
-                    <button onclick="deleteBook('${book.id}')" class="text-red-500 hover:text-red-700 mx-1 font-medium">Hapus</button>
-                </td>
+                    <button onclick="editBook('${book.__backendId || book.id}')" class="text-blue-500 hover:text-blue-700 mx-1 font-medium">Edit</button>
+                    <button onclick="deleteBook('${book.__backendId || book.id}')" class="text-red-500 hover:text-red-700 mx-1 font-medium">Hapus</button>                </td>
             </tr>
         `;
     });
@@ -161,8 +160,83 @@ async function deleteBook(backendId) {
     }
 }
 
-function editBook(id) {
-    alert("Menyiapkan edit untuk buku kode: " + id + "\n(Logika form edit mirip dengan tambah buku)");
+// Ganti fungsi editBook yang lama dengan ini:
+
+function editBook(backendId) {
+    // 1. Cari data buku yang ingin diedit dari state/memori
+    // (Gunakan __backendId jika dari GAS, atau id lokal jika simulasi)
+    const book = appState.allRecords.find(b => b.__backendId === backendId || b.id === backendId);
+    
+    if (!book) {
+        showToast("Data buku tidak ditemukan!", "error");
+        return;
+    }
+
+    // 2. Buat form HTML yang sudah terisi (pre-filled) dengan data lama
+    const formHtml = `
+        <form onsubmit="processUpdateBook(event, '${book.__backendId || book.id}')" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Judul Buku</label>
+                <input type="text" id="editBookTitle" value="${book.title}" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pengarang</label>
+                <input type="text" id="editBookAuthor" value="${book.author}" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                <select id="editBookCategory" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="Fiksi" ${book.category === 'Fiksi' ? 'selected' : ''}>Fiksi</option>
+                    <option value="Non-Fiksi" ${book.category === 'Non-Fiksi' ? 'selected' : ''}>Non-Fiksi</option>
+                    <option value="Pelajaran" ${book.category === 'Pelajaran' ? 'selected' : ''}>Buku Pelajaran</option>
+                </select>
+            </div>
+            
+            <div class="pt-4 flex justify-end gap-3 border-t mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">Update Buku</button>
+            </div>
+        </form>
+    `;
+    
+    openModal("Edit Data Buku", formHtml);
+}
+
+// Fungsi untuk mengirim data update ke server
+async function processUpdateBook(event, backendId) {
+    event.preventDefault();
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.innerText = "Mengupdate...";
+    submitBtn.disabled = true;
+    
+    // Ambil data baru dari form
+    const updatedPayload = {
+        __backendId: backendId, // ID ini penting agar GAS tahu baris mana yang diupdate
+        id: backendId.replace('__backendId', ''), // Simpan ID tampilan jika perlu
+        title: document.getElementById('editBookTitle').value,
+        author: document.getElementById('editBookAuthor').value,
+        category: document.getElementById('editBookCategory').value,
+        type: 'book'
+    };
+
+    // KIRIM KE GOOGLE APPS SCRIPT! (Action: 'update')
+    const result = await window.dataSdk.sendData('update', updatedPayload);
+    
+    if (result && result.success) {
+        // Update data di memori lokal agar tabel langsung berubah
+        appState.allRecords = appState.allRecords.map(record => 
+            (record.__backendId === backendId || record.id === backendId) ? updatedPayload : record
+        );
+        
+        closeModal();
+        showToast("Buku berhasil diupdate!", "success");
+        renderCurrentSection(); 
+    } else {
+        submitBtn.innerText = "Update Buku";
+        submitBtn.disabled = false;
+        showToast("Gagal mengupdate buku", "error");
+    }
 }
 
 function deleteBook(id) {
