@@ -35,27 +35,98 @@ function formatDateTimeShort(dateStr) {
     });
 }
 
+// Helper Otomatis Check-In saat peminjaman buku disimpan
+async function autoCheckInVisitorFromLoan(peminjam, judulBuku = '', nowIso = new Date().toISOString()) {
+    const cleanName = String(peminjam || '').trim();
+    if (!cleanName) return false;
+
+    const alreadyActive = appState.allRecords.some(v => {
+        if (v.type !== 'visitor') return false;
+        const vName = (v.visitorName || v.name || '').trim().toLowerCase();
+        const st = (v.visitorStatus || v.status || '').toLowerCase();
+        const isOut = Boolean(v.visitorCheckOut || v.checkOut) || st === 'selesai' || st === 'checked_out';
+        return vName === cleanName.toLowerCase() && !isOut;
+    });
+
+    if (alreadyActive) return false;
+
+    const memberRecord = appState.allRecords.find(m =>
+        m.type === 'member' &&
+        (m.memberName || m.name || '').trim().toLowerCase() === cleanName.toLowerCase()
+    );
+    const kelasVal = memberRecord ? (memberRecord.memberClass || memberRecord.role || '-') : '-';
+    const dt = new Date(nowIso);
+    const timeString = dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const newVisitor = {
+        visitorName: cleanName,
+        name: cleanName,
+        visitorClass: kelasVal,
+        institution: kelasVal,
+        visitorPurpose: 'Meminjam Buku',
+        purpose: 'Meminjam Buku',
+        visitorNotes: judulBuku ? `Otomatis saat meminjam: ${judulBuku}` : 'Otomatis dari transaksi peminjaman',
+        visitorCheckIn: nowIso,
+        visitDate: nowIso,
+        timeIn: timeString,
+        visitorCheckOut: '',
+        visitorStatus: 'sedang_berkunjung',
+        type: 'visitor'
+    };
+
+    const visResult = await window.dataSdk.sendData('create', newVisitor);
+    if (visResult && visResult.success) {
+        if (visResult.__backendId) newVisitor.__backendId = visResult.__backendId;
+        if (visResult.id) newVisitor.id = visResult.id;
+        appState.allRecords.push(newVisitor);
+        return true;
+    }
+    return false;
+}
+
+// Helper Otomatis Check-Out saat buku dikembalikan
+async function autoCheckOutVisitorFromReturn(peminjam, nowIso = new Date().toISOString()) {
+    const cleanName = String(peminjam || '').trim().toLowerCase();
+    if (!cleanName) return false;
+
+    const activeVisitor = appState.allRecords.find(v => {
+        if (v.type !== 'visitor') return false;
+        const vName = (v.visitorName || v.name || '').trim().toLowerCase();
+        const st = (v.visitorStatus || v.status || '').toLowerCase();
+        const isOut = Boolean(v.visitorCheckOut || v.checkOut) || st === 'selesai' || st === 'checked_out';
+        return vName === cleanName && !isOut;
+    });
+
+    if (!activeVisitor) return false;
+
+    const updatedVisitor = {
+        ...activeVisitor,
+        visitorCheckOut: nowIso,
+        checkOut: nowIso,
+        visitorStatus: 'selesai',
+        status: 'Selesai'
+    };
+
+    const visResult = await window.dataSdk.sendData('update', updatedVisitor);
+    if (visResult && visResult.success !== false) {
+        appState.allRecords = appState.allRecords.map(record =>
+            record === activeVisitor ? updatedVisitor : record
+        );
+        return true;
+    }
+    return false;
+}
+
 function renderVisitorsSection() {
     const visitors = getRecordsByType('visitor');
     const todayStr = new Date().toISOString().split('T')[0];
 
     let todayCount = 0;
     let activeCount = 0;
-
-    visitors.forEach(v => {
-        const rawCheckIn = v.visitorCheckIn || v.visitDate || v.date || '';
-        if (rawCheckIn.startsWith(todayStr)) {
-            todayCount++;
-        }
-        const statusRaw = (v.visitorStatus || v.status || '').toLowerCase();
-        const hasCheckedOut = Boolean(v.visitorCheckOut || v.checkOut) || statusRaw === 'selesai' || statusRaw === 'checked_out';
-        if (!hasCheckedOut) {
-            activeCount++;
-        }
-    });
-
+    let activeCardsHtml = '';
     let rowsHtml = '';
-    visitors.forEach((visitor) => {
+
+    visitors.forEach((visitor, idx) => {
         const nama = visitor.visitorName || visitor.name || '-';
         const kelas = visitor.visitorClass || visitor.institution || visitor.role || '-';
         const keperluan = visitor.visitorPurpose || visitor.purpose || '-';
@@ -63,18 +134,52 @@ function renderVisitorsSection() {
         const checkInRaw = visitor.visitorCheckIn || visitor.visitDate || visitor.date || '';
         const checkOutRaw = visitor.visitorCheckOut || visitor.checkOut || '';
 
+        if (checkInRaw.startsWith(todayStr)) {
+            todayCount++;
+        }
+
         const statusRaw = (visitor.visitorStatus || visitor.status || '').toLowerCase();
         const isCheckedOut = Boolean(checkOutRaw) || statusRaw === 'selesai' || statusRaw === 'checked_out';
-        const targetId = visitor.__backendId || visitor.id || '';
+        const targetId = visitor.__backendId || visitor.id || `temp_${idx}`;
 
         const checkInDisplay = checkInRaw ? formatDateTimeShort(checkInRaw) : '-';
         const checkOutDisplay = isCheckedOut ? (checkOutRaw ? formatDateTimeShort(checkOutRaw) : 'Selesai') : '-';
         const durasiDisplay = calculateVisitDuration(checkInRaw, isCheckedOut ? checkOutRaw : null);
 
+        if (!isCheckedOut) {
+            activeCount++;
+            const jamMasuk = checkInRaw
+                ? new Date(checkInRaw).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                : '-';
+
+            activeCardsHtml += `
+                <div class="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-2xs flex flex-col justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <h4 class="font-bold text-gray-800 text-sm leading-snug">${nama}</h4>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 inline-flex items-center gap-1 flex-shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500">${kelas}</p>
+                        <div class="pt-1.5 space-y-0.5 text-xs text-gray-600">
+                            <p><span class="font-semibold text-gray-700">Keperluan:</span> ${keperluan}</p>
+                            <p><span class="font-semibold text-gray-700">Check-in:</span> ${jamMasuk}</p>
+                            <p><span class="font-semibold text-gray-700">Durasi:</span> ${durasiDisplay}</p>
+                        </div>
+                    </div>
+                    <button onclick="processVisitorCheckOut('${targetId}', '${nama.replace(/'/g, "\\'")}')"
+                        class="w-full py-2 px-3 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold shadow-2xs transition-colors">
+                        ✓ Check-Out
+                    </button>
+                </div>
+            `;
+        }
+
         const statusBadge = isCheckedOut
             ? `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Selesai</span>`
             : `<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 inline-flex items-center gap-1.5">
-                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sedang Berkunjung
+                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
                </span>`;
 
         rowsHtml += `
@@ -94,9 +199,9 @@ function renderVisitorsSection() {
                 <td class="p-3.5 whitespace-nowrap">
                     <div class="flex items-center gap-1.5">
                         ${!isCheckedOut
-                            ? `<button onclick="processVisitorCheckOut('${targetId}')" class="bg-amber-50 text-amber-700 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">Check-Out</button>`
+                            ? `<button onclick="processVisitorCheckOut('${targetId}', '${nama.replace(/'/g, "\\'")}')" title="Check-Out" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">✓ Check-Out</button>`
                             : ''}
-                        <button onclick="deleteVisitor('${targetId}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">Hapus</button>
+                        <button onclick="deleteVisitor('${targetId}')" title="Hapus" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors">Hapus</button>
                     </div>
                 </td>
             </tr>
@@ -106,6 +211,18 @@ function renderVisitorsSection() {
     if (visitors.length === 0) {
         rowsHtml = `<tr><td colspan="8" class="p-10 text-center text-gray-500">Belum ada data kunjungan. Check-in pengunjung pertama Anda!</td></tr>`;
     }
+
+    const activeSectionHtml = activeCount > 0 ? `
+        <div class="bg-emerald-50/75 border border-emerald-200 rounded-2xl p-5 space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-xs"></span>
+                <h3 class="font-bold text-emerald-800 text-sm">Pengunjung Aktif Saat Ini (${activeCount})</h3>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                ${activeCardsHtml}
+            </div>
+        </div>
+    ` : '';
 
     return `
         <div class="space-y-6">
@@ -153,6 +270,9 @@ function renderVisitorsSection() {
                     </div>
                 </div>
             </div>
+
+            <!-- PANEL PENGUNJUNG AKTIF SAAT INI -->
+            ${activeSectionHtml}
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="px-5 py-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -308,6 +428,8 @@ async function saveVisitor(event) {
     const result = await window.dataSdk.sendData('create', newVisitor);
 
     if (result && result.success) {
+        if (result.__backendId) newVisitor.__backendId = result.__backendId;
+        if (result.id) newVisitor.id = result.id;
         appState.allRecords.push(newVisitor);
         closeModal();
         showToast("Pengunjung berhasil Check-In!", "success");
@@ -319,8 +441,21 @@ async function saveVisitor(event) {
     }
 }
 
-async function processVisitorCheckOut(backendId) {
-    const visitor = appState.allRecords.find(v => v.type === 'visitor' && (v.__backendId === backendId || v.id === backendId));
+async function processVisitorCheckOut(backendId, fallbackName = '') {
+    let visitor = appState.allRecords.find(v =>
+        v.type === 'visitor' && (v.__backendId === backendId || v.id === backendId)
+    );
+
+    if (!visitor && fallbackName) {
+        visitor = appState.allRecords.find(v => {
+            if (v.type !== 'visitor') return false;
+            const vName = (v.visitorName || v.name || '').trim().toLowerCase();
+            const st = (v.visitorStatus || v.status || '').toLowerCase();
+            const isOut = Boolean(v.visitorCheckOut || v.checkOut) || st === 'selesai' || st === 'checked_out';
+            return vName === fallbackName.trim().toLowerCase() && !isOut;
+        });
+    }
+
     if (!visitor) {
         showToast("Data kunjungan tidak ditemukan!", "error");
         return;
@@ -329,7 +464,6 @@ async function processVisitorCheckOut(backendId) {
     const nowIso = new Date().toISOString();
     const updatedVisitor = {
         ...visitor,
-        __backendId: visitor.__backendId || backendId,
         visitorCheckOut: nowIso,
         checkOut: nowIso,
         visitorStatus: 'selesai',
@@ -337,9 +471,9 @@ async function processVisitorCheckOut(backendId) {
     };
 
     const result = await window.dataSdk.sendData('update', updatedVisitor);
-    if (result && result.success) {
+    if (result && result.success !== false) {
         appState.allRecords = appState.allRecords.map(record =>
-            (record.type === 'visitor' && (record.__backendId === backendId || record.id === backendId)) ? updatedVisitor : record
+            record === visitor ? updatedVisitor : record
         );
         showToast("Pengunjung berhasil Check-Out!", "success");
         renderCurrentSection();
