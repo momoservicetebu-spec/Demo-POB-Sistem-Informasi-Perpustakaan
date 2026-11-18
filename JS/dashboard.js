@@ -215,7 +215,7 @@ function renderDashboard() {
 
                 <!-- FOOTER -->
                 <footer class="bg-white/70 border-t border-indigo-100/60 px-4 md:px-6 py-2.5 text-center text-[11px] text-slate-500 flex-shrink-0">
-                    © 2026 Point OF Book (POB) Transaksi Buku Digital SMAN 1 BUMI AGUNG Dikembangkan Oleh Guntoro/Danish ShoOp untuk kemajuan pendidikan Indonesia | Versi 1.1.0
+                    © 2026 Point OF Book (POB) Transaksi Buku Digital SMAN 1 BUMI AGUNG Dikembangkan Oleh Guntoro/Danish ShoOp untuk kemajuan pendidikan Indonesia | Versi 2.1.0
                 </footer>
             </div>
 

@@ -34,6 +34,7 @@ function renderBooksSection() {
                     </span>
                 </td>
                 <td class="p-3 text-center whitespace-nowrap">
+                    <button onclick="showReadBookModal('${targetId}')" class="text-emerald-700 hover:text-emerald-900 mx-1 font-medium text-xs bg-emerald-50 px-2.5 py-1.5 rounded-lg">Baca</button>
                     <button onclick="editBook('${targetId}')" class="text-blue-600 hover:text-blue-800 mx-1 font-medium text-xs bg-blue-50 px-2.5 py-1.5 rounded-lg">Edit</button>
                     <button onclick="deleteBook('${targetId}')" class="text-red-600 hover:text-red-800 mx-1 font-medium text-xs bg-red-50 px-2.5 py-1.5 rounded-lg">Hapus</button>
                 </td>
@@ -466,4 +467,66 @@ function exportBooksExcel() {
     XLSX.utils.book_append_sheet(wb, ws, "Data Buku");
     XLSX.writeFile(wb, "Katalog_Buku_Perpustakaan.xlsx");
     showToast("Data buku berhasil diexport!", "success");
+}
+
+function showReadBookModal(backendId) {
+    const book = appState.allRecords.find(b => b.__backendId === backendId || b.id === backendId || b.bookBarcode === backendId);
+    if (!book) {
+        showToast("Data buku tidak ditemukan!", "error");
+        return;
+    }
+
+    const judulBuku = book.bookTitle || book.title || '-';
+    const members = getRecordsByType('member');
+    let memberDatalist = '';
+    members.forEach(m => {
+        const nama = m.memberName || m.name || '';
+        const kelas = m.memberClass || m.role || '';
+        if (nama) {
+            memberDatalist += `<option value="${nama}">${kelas}</option>`;
+        }
+    });
+
+    const formHtml = `
+        <form onsubmit="processReadBook(event, '${backendId}')" class="space-y-4">
+            <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-900">
+                <span class="font-semibold">Buku yang dibaca:</span> ${judulBuku}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pembaca *</label>
+                <input type="text" id="readerNameInput" list="readerMemberList" required autofocus
+                    placeholder="Ketik nama siswa / anggota..."
+                    class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm">
+                <datalist id="readerMemberList">${memberDatalist}</datalist>
+                <p class="text-xs text-gray-500 mt-1">Otomatis masuk ke daftar Pengunjung Aktif (Keperluan: Membaca Buku)</p>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-sm">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium text-sm">Mulai Baca & Check-In</button>
+            </div>
+        </form>
+    `;
+
+    openModal("Baca Buku di Tempat", formHtml, "max-w-md");
+}
+
+async function processReadBook(event, backendId) {
+    event.preventDefault();
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.innerText = "Memproses...";
+    submitBtn.disabled = true;
+
+    const book = appState.allRecords.find(b => b.__backendId === backendId || b.id === backendId || b.bookBarcode === backendId) || {};
+    const judulBuku = book.bookTitle || book.title || '';
+    const namaPembaca = document.getElementById('readerNameInput').value.trim();
+
+    if (typeof autoCheckInVisitorReading === 'function') {
+        await autoCheckInVisitorReading(namaPembaca, judulBuku);
+    }
+
+    closeModal();
+    showToast(`${namaPembaca} tercatat sedang membaca buku di Buku Tamu!`, "success");
 }

@@ -360,8 +360,7 @@ function showAddVisitorModal() {
                 <label class="block text-sm font-semibold text-gray-800 mb-1">Keperluan <span class="text-red-500">*</span></label>
                 <select id="visitorPurpose" required
                     class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm">
-                    <option value="">-- Pilih Keperluan --</option>
-                    <option value="Membaca Buku">Membaca Buku</option>
+                    <option value="Membaca Buku" selected>Membaca Buku</option>
                     <option value="Meminjam Buku">Meminjam Buku</option>
                     <option value="Mengembalikan Buku">Mengembalikan Buku</option>
                     <option value="Mengerjakan Tugas">Mengerjakan Tugas</option>
@@ -941,4 +940,55 @@ async function copyReportToClipboard() {
         ta.remove();
         showToast("Data berhasil disalin! Silakan Paste (Ctrl+V) di Google Sheets.", "success");
     }
+}
+
+// Helper Otomatis Check-In saat pengunjung membaca buku di tempat
+async function autoCheckInVisitorReading(namaPembaca, judulBuku = '') {
+    const cleanName = String(namaPembaca || '').trim();
+    if (!cleanName) return false;
+
+    const alreadyActive = appState.allRecords.some(v => {
+        if (v.type !== 'visitor') return false;
+        const vName = (v.visitorName || v.name || '').trim().toLowerCase();
+        const st = (v.visitorStatus || v.status || '').toLowerCase();
+        const isOut = Boolean(v.visitorCheckOut || v.checkOut) || st === 'selesai' || st === 'checked_out';
+        return vName === cleanName.toLowerCase() && !isOut;
+    });
+
+    if (alreadyActive) return false;
+
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const memberRecord = appState.allRecords.find(m =>
+        m.type === 'member' &&
+        (m.memberName || m.name || '').trim().toLowerCase() === cleanName.toLowerCase()
+    );
+    const kelasVal = memberRecord ? (memberRecord.memberClass || memberRecord.role || '-') : '-';
+
+    const newVisitor = {
+        visitorName: cleanName,
+        name: cleanName,
+        visitorClass: kelasVal,
+        institution: kelasVal,
+        visitorPurpose: 'Membaca Buku',
+        purpose: 'Membaca Buku',
+        visitorNotes: judulBuku ? `Membaca di tempat: ${judulBuku}` : 'Membaca buku di perpustakaan',
+        visitorCheckIn: nowIso,
+        visitDate: nowIso,
+        timeIn: timeString,
+        visitorCheckOut: '',
+        visitorStatus: 'sedang_berkunjung',
+        type: 'visitor'
+    };
+
+    const visResult = await window.dataSdk.sendData('create', newVisitor);
+    if (visResult && visResult.success) {
+        if (visResult.__backendId) newVisitor.__backendId = visResult.__backendId;
+        if (visResult.id) newVisitor.id = visResult.id;
+        appState.allRecords.push(newVisitor);
+        return true;
+    }
+    return false;
 }
