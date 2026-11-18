@@ -67,7 +67,7 @@ function renderSidebarNav() {
         { key: 'dashboard', label: 'Dashboard', icon: 'home' },
         { key: 'books', label: 'Data Buku', icon: 'book-open' },
         { key: 'catalog_ddc', label: 'Katalog Perpusnas', icon: 'library' },
-        { key: 'members', label: 'Data Anggota', icon: 'users' },
+        { key: 'digital_library', label: 'Perpustakaan Digital', icon: 'tablet' },        { key: 'members', label: 'Data Anggota', icon: 'users' },
         { key: 'loans', label: 'Sirkulasi', icon: 'arrow-left-right' },
         { key: 'visitors', label: 'Buku Tamu', icon: 'clipboard-check' },
         { key: 'reports', label: 'Laporan', icon: 'bar-chart-3' },

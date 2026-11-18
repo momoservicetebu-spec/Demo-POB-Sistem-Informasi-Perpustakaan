@@ -26,6 +26,8 @@ function renderCurrentSection() {
                 ? renderCatalogPerpusnasSection()
                 : '<div class="p-6 text-red-500">File JS/katalog_perpusnas.js belum dimuat di index.html!</div>';
             break;
+        
+        case 'digital_library': content.innerHTML = typeof renderDigitalLibrarySection === 'function' ? renderDigitalLibrarySection() : ''; break;
         case 'members': content.innerHTML = renderMembersSection(); break;
         case 'loans': content.innerHTML = renderCirculationSection(); break;
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
@@ -48,6 +50,7 @@ function navigateTo(section) {
         dashboard: 'Membuka Dashboard...',
         books: 'Memuat Katalog Data Buku...',
         catalog_ddc: 'Memuat Katalog Perpusnas...',
+        digital_library: 'Memuat Perpustakaan Digital...',
         members: 'Memuat Data Anggota...',
         loans: 'Memuat Sirkulasi Peminjaman...',
         visitors: 'Memuat Buku Tamu...',
