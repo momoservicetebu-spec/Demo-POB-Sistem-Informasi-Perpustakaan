@@ -237,33 +237,34 @@
                 <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-6">
                 <!-- Username -->
                     <div class="flex items-center gap-3.5">
-                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-4">
+                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-5">
                             <i data-lucide="user" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1">
                             <label for="loginUsername" class="block text-[11px] font-medium text-indigo-100 mb-1.5 ml-3">Username</label>
                             <input type="text" id="loginUsername" required autocomplete="username"
                                 placeholder="Enter Username"
-                                class="login-glass-input w-full text-sm">
+                                class="login-underline-input w-full text-sm">
                         </div>
                     </div>
 
                     <!-- Password -->
                     <div class="flex items-center gap-3.5">
-                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-4">
+                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-5">
                             <i data-lucide="lock" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1 relative">
                             <label for="loginPassword" class="block text-[11px] font-medium text-indigo-100 mb-1.5 ml-3">Password</label>
                             <input type="password" id="loginPassword" required autocomplete="current-password"
                                 placeholder="Enter Password"
-                                class="login-glass-input w-full pr-10 text-sm">
+                                class="login-underline-input w-full pr-10 text-sm">
                             <button type="button" onclick="togglePasswordVisibility()" title="Tampilkan / Sembunyikan Password"
                                 class="absolute right-3.5 bottom-2.5 text-indigo-100 hover:text-white">
                                 <i id="eyePasswordIcon" data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                         </div>
-                    </div>
+                    </div>                    
+
                     <!-- Tombol Aksi Sesuai Inspirasi -->
                     <div class="pt-3 space-y-3">
                         <button type="submit" id="btnLoginSubmit"
