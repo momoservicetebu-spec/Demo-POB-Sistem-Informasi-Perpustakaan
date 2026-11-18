@@ -4,12 +4,24 @@
 window.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
 window.dashboardCalDate = new Date();
 
-function toggleMobileSidebar() {
+function toggleMobileSidebar(forceClose = false) {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    if (sidebar && overlay) {
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+    if (!sidebar || !overlay) return;
+
+    if (forceClose) {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+        return;
+    }
+
+    const isCurrentlyClosed = sidebar.classList.contains('-translate-x-full');
+    if (isCurrentlyClosed) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
     }
 }
 
@@ -92,15 +104,14 @@ function renderDashboard() {
     return `
     <div class="flex h-screen bg-[#e9eef8] p-0 md:p-3 overflow-hidden relative">
         
-        <!-- OVERLAY MOBILE -->
-        <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black bg-opacity-40 z-20 hidden md:hidden"></div>
+<!-- OVERLAY MOBILE (WAJIB ADA CLASS 'hidden' SAAT AWAL) -->
+        <div id="sidebarOverlay" onclick="toggleMobileSidebar(true)" class="fixed inset-0 bg-black/45 z-20 hidden md:hidden"></div>
 
         <!-- SHELL UTAMA ROUNDED -->
         <div class="flex-1 flex bg-[#f4f6fc] md:rounded-3xl shadow-xl overflow-hidden border border-white/80">
 
-        <!-- SIDEBAR DINAMIS BERWARNA INDIGO -->
-            <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-72 ${isSlim ? 'md:w-20' : 'md:w-72'} bg-gradient-to-b from-[#43489e] to-[#343882] text-white flex-shrink-0 flex flex-col transition-all duration-300">
-                
+            <!-- SIDEBAR DINAMIS BERWARNA INDIGO -->
+            <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 -translate-x-full md:translate-x-0 w-72 ${isSlim ? 'md:w-20' : 'md:w-72'} bg-gradient-to-b from-[#43489e] to-[#343882] text-white flex-shrink-0 flex flex-col transition-all duration-300">                
                 <!-- Profil / Logo Sekolah di Atas Sidebar -->
                 <div id="sidebarBrandHeader" class="p-4 border-b border-white/10 flex items-center ${isSlim ? 'md:flex-col md:gap-2.5' : 'justify-between'} gap-2">
                     <div class="flex items-center gap-3 min-w-0">
@@ -431,8 +442,7 @@ function renderDashboardHome() {
                                 <span class="text-xl font-extrabold text-slate-800">${availablePercent}%</span>
                             </div>
                         </div>
-                        <button onclick="navigateTo('loans')" class="mt-3 w-full py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors">
-                            Kelola Sirkulasi
+                        onclick="navigateTo('${item.key}'); if(window.innerWidth < 768) toggleMobileSidebar(true);"                            Kelola Sirkulasi
                         </button>
                     </div>
                 </div>

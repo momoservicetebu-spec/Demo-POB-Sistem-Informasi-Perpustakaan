@@ -102,3 +102,66 @@ function closeModal() {
     const modal = document.getElementById('globalModal');
     if (modal) modal.remove();
 }
+
+// 6. Sistem Global Loading Overlay & Progress Bar (Untuk Semua Menu & Pemrosesan Data)
+let activeLoadingCount = 0;
+
+function showGlobalLoading(message = 'Memproses data...', subMessage = 'Mohon tunggu sebentar, jangan tutup halaman.') {
+    activeLoadingCount++;
+
+    let overlay = document.getElementById('globalProcessLoading');
+    if (!overlay) {
+        const html = `
+        <div id="globalProcessLoading" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/45 backdrop-blur-xs transition-opacity duration-200">
+            <!-- Top Slim Animated Progress Bar -->
+            <div class="fixed top-0 left-0 right-0 h-1 bg-indigo-100 overflow-hidden z-[10000]">
+                <div class="h-full bg-gradient-to-r from-indigo-500 via-orange-400 to-indigo-600 animate-loading-bar"></div>
+            </div>
+
+            <!-- Kartu Spinner Tengah -->
+            <div class="bg-white/95 border border-indigo-100 rounded-3xl shadow-2xl px-7 py-6 max-w-xs w-[88vw] text-center space-y-3.5 transform scale-100">
+                <div class="relative w-14 h-14 mx-auto">
+                    <div class="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-indigo-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p id="globalLoadingTitle" class="text-sm font-bold text-slate-800">${message}</p>
+                    <p id="globalLoadingSub" class="text-[11px] text-slate-400 mt-1">${subMessage}</p>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+    } else {
+        const titleEl = document.getElementById('globalLoadingTitle');
+        const subEl = document.getElementById('globalLoadingSub');
+        if (titleEl) titleEl.textContent = message;
+        if (subEl) subEl.textContent = subMessage;
+        overlay.classList.remove('hidden');
+    }
+}
+
+function hideGlobalLoading(force = false) {
+    activeLoadingCount = force ? 0 : Math.max(0, activeLoadingCount - 1);
+    if (activeLoadingCount === 0) {
+        const overlay = document.getElementById('globalProcessLoading');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+}
+
+// Helper pembungkus fungsi async agar otomatis menampilkan & menutup loading
+async function runWithLoading(asyncFn, message = 'Memproses data...', subMessage = 'Sedang menyinkronkan dengan server...') {
+    showGlobalLoading(message, subMessage);
+    try {
+        return await asyncFn();
+    } finally {
+        hideGlobalLoading();
+    }
+}

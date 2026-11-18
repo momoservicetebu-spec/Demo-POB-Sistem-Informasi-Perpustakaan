@@ -290,3 +290,23 @@ html, body {
 .anim-hero-text {
   animation: fadeInUp 0.6s ease-out forwards;
 }
+
+/* Animasi Top Progress Bar Global Loading */
+@keyframes loadingBarSlide {
+  0% { transform: translateX(-100%); width: 45%; }
+  50% { transform: translateX(40%); width: 65%; }
+  100% { transform: translateX(220%); width: 45%; }
+}
+
+.animate-loading-bar {
+  animation: loadingBarSlide 1.35s ease-in-out infinite;
+}
+
+@media (max-width: 767px) {
+  /* Pastikan overlay tidak memblokir sentuhan saat sidebar tertutup */
+  #sidebar.-translate-x-full ~ #sidebarOverlay,
+  #sidebarOverlay.hidden {
+    display: none !important;
+    pointer-events: none !important;
+  }
+}

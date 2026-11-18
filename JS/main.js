@@ -37,8 +37,32 @@ function renderCurrentSection() {
 }
 
 function navigateTo(section) {
+    const sectionTitles = {
+        dashboard: 'Membuka Dashboard...',
+        books: 'Memuat Katalog Data Buku...',
+        members: 'Memuat Data Anggota...',
+        loans: 'Memuat Sirkulasi Peminjaman...',
+        visitors: 'Memuat Buku Tamu...',
+        reports: 'Menyiapkan Laporan & Statistik...',
+        users: 'Memuat Manajemen User...',
+        settings: 'Membuka Pengaturan Sistem...'
+    };
+
+    if (typeof showGlobalLoading === 'function') {
+        showGlobalLoading(sectionTitles[section] || 'Memuat halaman...', 'Menyiapkan tampilan modul...');
+    }
+
     appState.currentSection = section;
-    renderCurrentSection();
+
+    setTimeout(() => {
+        try {
+            renderCurrentSection();
+        } finally {
+            if (typeof hideGlobalLoading === 'function') {
+                hideGlobalLoading();
+            }
+        }
+    }, 180);
 }
 
 async function refreshDataFromServer() {
@@ -83,17 +107,21 @@ async function initApp() {
         userNameDisplay.innerText = currentUser.fullName || currentUser.name || currentUser.username;
     }
 
-    const content = document.getElementById('mainContent');
-    if (content) {
-        content.innerHTML = `<div class="p-8 text-center text-gray-600">Memuat data dari server...</div>`;
+    if (typeof showGlobalLoading === 'function') {
+        showGlobalLoading('Menyiapkan PerpusWeb...', 'Menghubungkan ke server & memuat data...');
     }
 
     try {
         await refreshDataFromServer();
     } catch (error) {
         console.error("Gagal memulai aplikasi:", error);
+        const content = document.getElementById('mainContent');
         if (content) {
             content.innerHTML = `<div class="p-8 text-center text-red-500">Gagal memuat data dari server.</div>`;
+        }
+    } finally {
+        if (typeof hideGlobalLoading === 'function') {
+            hideGlobalLoading(true);
         }
     }
 }

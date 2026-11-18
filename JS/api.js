@@ -1,16 +1,34 @@
 // JS/api.js
 
-// URL dari index.html Anda sebelumnya
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnRb6cqYz0yJ1oDzIHqwLZiSU77KCc1BJ8az07iA9xbjbti5m13q9EaY-veLwkah5f/exec'; 
+
+function getProcessLoadingLabel(action, payload) {
+    const typeMap = {
+        book: 'Data Buku',
+        member: 'Data Anggota',
+        loan: 'Transaksi Sirkulasi',
+        visitor: 'Buku Tamu',
+        user: 'Data Pengguna',
+        setting: 'Pengaturan Sistem'
+    };
+    const entityName = (payload && payload.type && typeMap[payload.type]) ? typeMap[payload.type] : 'Data';
+
+    if (action === 'create') return `Menyimpan ${entityName}...`;
+    if (action === 'update') return `Memperbarui ${entityName}...`;
+    if (action === 'delete') return `Menghapus ${entityName}...`;
+    return `Memproses ${entityName}...`;
+}
 
 window.dataSdk = {
     // 1. Mengambil seluruh data dari GAS
     fetchAll: async function() {
+        if (typeof showGlobalLoading === 'function') {
+            showGlobalLoading('Memuat & menyinkronkan data...', 'Mengambil data terbaru dari server perpustakaan');
+        }
         try {
             const response = await fetch(SCRIPT_URL);
             const result = await response.json();
             
-            // GAS biasanya mengembalikan data di dalam properti 'data'
             if (result.status === 'success' && result.data) {
                 return result.data;
             } else if (Array.isArray(result)) {
@@ -19,13 +37,24 @@ window.dataSdk = {
             return [];
         } catch (error) {
             console.error("Gagal mengambil data:", error);
-            showToast("Gagal terhubung ke server", "error");
+            if (typeof showToast === 'function') {
+                showToast("Gagal terhubung ke server", "error");
+            }
             return [];
+        } finally {
+            if (typeof hideGlobalLoading === 'function') {
+                hideGlobalLoading();
+            }
         }
     },
 
     // 2. Mengirim data ke GAS (create / update / delete)
     sendData: async function(action, payload) {
+        const loadingTitle = getProcessLoadingLabel(action, payload);
+        if (typeof showGlobalLoading === 'function') {
+            showGlobalLoading(loadingTitle, 'Sedang menyinkronkan ke Google Spreadsheet...');
+        }
+
         try {
             if (action === 'create' && !payload.__backendId) {
                 payload.__backendId = 'ID-' + Date.now();
@@ -47,8 +76,14 @@ window.dataSdk = {
             return result;
         } catch (error) {
             console.error("Gagal mengirim data:", error);
-            showToast("Gagal menyimpan data ke server", "error");
+            if (typeof showToast === 'function') {
+                showToast("Gagal menyimpan data ke server", "error");
+            }
             return { success: false };
+        } finally {
+            if (typeof hideGlobalLoading === 'function') {
+                hideGlobalLoading();
+            }
         }
     }
 };
