@@ -12,7 +12,7 @@ function renderCurrentSection() {
         case 'dashboard': content.innerHTML = renderDashboardHome(); break;
         case 'books': content.innerHTML = renderBooksSection(); break;
         case 'members': content.innerHTML = renderMembersSection(); break;
-        case 'loans': content.innerHTML = renderLoansSection(); break;
+        case 'loans': content.innerHTML = renderCirculationSection(); break; // <-- Sudah disesuaikan
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
         case 'settings': content.innerHTML = renderSettingsSection(); break;
         default:
@@ -29,7 +29,16 @@ function navigateTo(section) {
     renderCurrentSection();
 }
 
-// 3. Inisialisasi Aplikasi Utama (TERBARU)
+// 3. Fungsi untuk menyegarkan data dari server secara diam-diam
+async function refreshDataFromServer() {
+    if (window.dataSdk && typeof window.dataSdk.fetchAll === 'function') {
+        const dataDariServer = await window.dataSdk.fetchAll();
+        appState.allRecords = dataDariServer || [];
+        renderCurrentSection();
+    }
+}
+
+// 4. Inisialisasi Aplikasi Utama
 async function initApp() {
     if (!currentUser) return;
 
@@ -41,7 +50,7 @@ async function initApp() {
     // B. Tampilkan nama user
     const userNameDisplay = document.getElementById('userNameDisplay');
     if (userNameDisplay) {
-        userNameDisplay.innerText = currentUser.name || currentUser.username;
+        userNameDisplay.innerText = currentUser.fullName || currentUser.name || currentUser.username;
     }
 
     // C. Tampilkan status loading di konten utama
@@ -52,27 +61,19 @@ async function initApp() {
 
     // D. Hubungkan dan muat data dari Google Apps Script melalui api.js
     try {
-        if (window.dataSdk && typeof window.dataSdk.fetchAll === 'function') {
-            // Tarik data dari GAS
-            const dataDariServer = await window.dataSdk.fetchAll();
-            appState.allRecords = dataDariServer || [];
-            
-            // Render halaman utama setelah data siap
-            renderCurrentSection(); 
-        } else {
-            // Jika api.js belum diload, tetap tampilkan UI (Simulasi)
-            renderCurrentSection(); 
-        }
+        await refreshDataFromServer();
     } catch (error) {
         console.error("Gagal memulai aplikasi:", error);
-        content.innerHTML = `<div class="p-8 text-center text-red-500">Gagal memuat data dari server.</div>`;
+        if (content) {
+            content.innerHTML = `<div class="p-8 text-center text-red-500">Gagal memuat data dari server.</div>`;
+        }
     }
 }
 
 // Jalankan aplikasi saat dokumen siap
 document.addEventListener('DOMContentLoaded', initApp);
 
-// 4. Fungsi Logout
+// 5. Fungsi Logout
 function logout() {
     const confirmLogout = confirm('Apakah Anda yakin ingin keluar?');
     if (confirmLogout) {
