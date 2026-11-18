@@ -19,7 +19,7 @@ function calculateFine(dueDateStr, returnDateStr = null) {
 }
 
 function renderCirculationSection() {
-    const transactions = [...getRecordsByType('loan')].sort((a, b) => {
+    const transactions = [...getRecordsByType('loan')].reverse().sort((a, b) => {
         const timeA = new Date(a.timestamp || a.loanDate || 0).getTime();
         const timeB = new Date(b.timestamp || b.loanDate || 0).getTime();
         return timeB - timeA;
@@ -185,6 +185,85 @@ function handleLoanBarcodePreview(val) {
     }
 }
 
+// =========================================================================
+// FITUR SCANNER KAMERA HP (BARCODE / QR CODE)
+// =========================================================================
+let activeBarcodeScanner = null;
+
+async function toggleBarcodeCameraScanner(targetInputId = 'loanBarcode', previewCallbackName = 'handleLoanBarcodePreview') {
+    const wrapperEl = document.getElementById('cameraScannerWrapper');
+    const readerDivId = 'cameraBarcodeReader';
+    if (!wrapperEl) return;
+
+    if (activeBarcodeScanner) {
+        await stopBarcodeCameraScanner();
+        return;
+    }
+
+    if (typeof Html5Qrcode === 'undefined') {
+        showToast("Library scanner kamera belum termuat. Periksa koneksi internet.", "error");
+        return;
+    }
+
+    wrapperEl.classList.remove('hidden');
+
+    try {
+        activeBarcodeScanner = new Html5Qrcode(readerDivId);
+        await activeBarcodeScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 130 },
+                aspectRatio: 1.5
+            },
+            async (decodedText) => {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    osc.frequency.value = 900;
+                    osc.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.12);
+                } catch (e) {}
+
+                const inputEl = document.getElementById(targetInputId);
+                if (inputEl) {
+                    inputEl.value = decodedText.trim();
+                    if (previewCallbackName && typeof window[previewCallbackName] === 'function') {
+                        window[previewCallbackName](decodedText.trim());
+                    }
+                }
+
+                showToast(`Barcode terbaca: ${decodedText.trim()}`, "success");
+                await stopBarcodeCameraScanner();
+
+                const memberInput = document.getElementById('loanMember');
+                if (memberInput) memberInput.focus();
+            },
+            () => {}
+        );
+    } catch (err) {
+        console.error("Kamera error:", err);
+        activeBarcodeScanner = null;
+        wrapperEl.classList.add('hidden');
+        showToast("Tidak dapat mengakses kamera HP. Pastikan izin kamera diizinkan & memakai HTTPS.", "error");
+    }
+}
+
+async function stopBarcodeCameraScanner() {
+    const wrapperEl = document.getElementById('cameraScannerWrapper');
+    if (activeBarcodeScanner) {
+        try {
+            await activeBarcodeScanner.stop();
+            await activeBarcodeScanner.clear();
+        } catch (e) {}
+        activeBarcodeScanner = null;
+    }
+    if (wrapperEl) {
+        wrapperEl.classList.add('hidden');
+    }
+}
+
 // Helper menghitung ulang tanggal jatuh tempo jika Tanggal Pinjam diubah
 function updateDueDateFromLoanDate() {
     const loanDateInput = document.getElementById('loanDate');
@@ -233,11 +312,29 @@ function showBorrowModal() {
         <form onsubmit="saveLoan(event)" class="space-y-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-800 mb-1.5">Barcode Buku <span class="text-red-500">*</span></label>
-                <input type="text" id="loanBarcode" list="bookBarcodeList" oninput="handleLoanBarcodePreview(this.value)" required autofocus
-                    placeholder="Scan atau input barcode buku"
-                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm">
+                <div class="flex gap-2">
+                    <input type="text" id="loanBarcode" list="bookBarcodeList" oninput="handleLoanBarcodePreview(this.value)" required autofocus
+                        placeholder="Scan atau input barcode buku"
+                        class="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm">
+                    <button type="button" onclick="toggleBarcodeCameraScanner('loanBarcode', 'handleLoanBarcodePreview')"
+                        class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors">
+                        <span>📷</span> Scan
+                    </button>
+                </div>
+
+                <!-- Wadah Kamera Scanner HP -->
+                <div id="cameraScannerWrapper" class="hidden mt-2.5 p-2.5 bg-gray-900 rounded-xl border border-gray-700 space-y-2">
+                    <div id="cameraBarcodeReader" class="w-full overflow-hidden rounded-lg"></div>
+                    <div class="flex items-center justify-between text-[11px] text-gray-300 px-1">
+                        <span>Arahkan kamera ke barcode ISBN / kode buku</span>
+                        <button type="button" onclick="stopBarcodeCameraScanner()" class="text-red-400 hover:text-red-300 font-semibold">
+                            Tutup Kamera
+                        </button>
+                    </div>
+                </div>
+
                 <datalist id="bookBarcodeList">${bookDatalist}</datalist>
-                <p class="text-xs text-gray-500 mt-1">Wajib - gunakan scanner atau input manual</p>
+                <p class="text-xs text-gray-500 mt-1">Wajib - gunakan kamera HP, scanner, atau input manual</p>
                 <div id="loanBookPreview" class="hidden"></div>
             </div>
 
@@ -274,7 +371,7 @@ function showBorrowModal() {
                 <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl font-semibold text-sm shadow-sm transition-colors">
                     Simpan Peminjaman
                 </button>
-                <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl font-medium text-sm transition-colors">
+                <button type="button" onclick="stopBarcodeCameraScanner(); closeModal();" class="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl font-medium text-sm transition-colors">
                     Batal
                 </button>
             </div>
@@ -286,6 +383,7 @@ function showBorrowModal() {
 
 async function saveLoan(event) {
     event.preventDefault();
+    await stopBarcodeCameraScanner();
 
     const submitBtn = event.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerText;
@@ -314,17 +412,18 @@ async function saveLoan(event) {
 
     const kodeFinal = bookRecord ? (bookRecord.bookBarcode || barcodeInput) : barcodeInput;
     const judulFinal = bookRecord ? (bookRecord.bookTitle || bookRecord.title || barcodeInput) : barcodeInput;
+    const nowIso = new Date().toISOString();
 
     const newLoan = {
         loanBarcode: kodeFinal,
         loanBookTitle: judulFinal,
         loanMember: peminjam,
         loanQuantity: jumlahBuku,
-        loanDate: tglPinjamVal ? new Date(tglPinjamVal).toISOString() : new Date().toISOString(),
-        loanDueDate: tglTenggatVal ? new Date(tglTenggatVal).toISOString() : new Date().toISOString(),
+        loanDate: tglPinjamVal ? new Date(tglPinjamVal).toISOString() : nowIso,
+        loanDueDate: tglTenggatVal ? new Date(tglTenggatVal).toISOString() : nowIso,
         loanStatus: 'dipinjam',
         type: 'loan',
-        timestamp: new Date().toISOString()
+        timestamp: nowIso
     };
 
     const result = await window.dataSdk.sendData('create', newLoan);
@@ -343,7 +442,7 @@ async function saveLoan(event) {
 
         // Otomatis Check-In ke Buku Tamu
         const autoCheckedIn = typeof autoCheckInVisitorFromLoan === 'function'
-            ? await autoCheckInVisitorFromLoan(peminjam, judulFinal, newLoan.timestamp)
+            ? await autoCheckInVisitorFromLoan(peminjam, judulFinal, nowIso)
             : false;
 
         closeModal();
@@ -354,8 +453,13 @@ async function saveLoan(event) {
             "success"
         );
         renderCurrentSection();
+    } else {
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+        showToast("Gagal mencatat peminjaman", "error");
     }
 }
+
 // =========================================================================
 // FITUR EDIT DATA PEMINJAMAN
 // =========================================================================
@@ -473,35 +577,22 @@ async function handleEditLoanSubmit(event, backendId) {
             (record.__backendId === backendId || record.id === backendId) ? updatedLoan : record
         );
 
-        // Kembalikan stok buku sesuai jumlah yang dipinjam (kecuali jika kondisi 'Hilang')
-        if (condition !== 'Hilang') {
-            const kodeBuku = loan.loanBarcode;
-            const bookRecord = appState.allRecords.find(b => b.type === 'book' && (b.bookBarcode === kodeBuku || b.id === kodeBuku));
+        // Jika masih dipinjam dan jumlah buku berubah, sesuaikan stok buku di katalog
+        if (!isReturned && oldQty !== newQty) {
+            const bookRecord = appState.allRecords.find(b => b.type === 'book' && (b.bookBarcode === newBarcode || b.id === newBarcode));
             if (bookRecord && bookRecord.bookStock !== undefined) {
-                bookRecord.bookStock = Number(bookRecord.bookStock) + qty;
+                const diff = newQty - oldQty;
+                bookRecord.bookStock = Math.max(0, Number(bookRecord.bookStock) - diff);
                 if (bookRecord.__backendId) {
                     await window.dataSdk.sendData('update', bookRecord);
                 }
             }
         }
 
-        // Otomatis Check-Out dari Buku Tamu
-        const peminjamName = loan.loanMember || loan.memberName || '';
-        const autoCheckedOut = typeof autoCheckOutVisitorFromReturn === 'function'
-            ? await autoCheckOutVisitorFromReturn(peminjamName, updatedLoan.returnDate)
-            : false;
-
-        const baseMsg = fineAmount > 0
-            ? `Buku dikembalikan (${condition}) • Denda: ${formatRupiah(fineAmount)}`
-            : `Buku berhasil dikembalikan (Kondisi: ${condition})!`;
-
-        showToast(
-            autoCheckedOut
-                ? `${baseMsg} & Otomatis Check-Out Buku Tamu!`
-                : baseMsg,
-            "success"
-        );
+        showToast("Data peminjaman berhasil diperbarui!", "success");
         renderCurrentSection();
+    } else {
+        showToast("Gagal memperbarui data peminjaman", "error");
     }
 }
 
@@ -586,13 +677,14 @@ async function processReturn(event, backendId) {
     const condition = document.getElementById('returnBookCondition')?.value || 'Baik';
     const { daysLate, fineAmount } = calculateFine(loan.loanDueDate);
     const qty = Number(loan.loanQuantity || loan.quantity || 1);
+    const nowIso = new Date().toISOString();
 
     const updatedLoan = {
         ...loan,
         __backendId: loan.__backendId || backendId,
         loanStatus: 'dikembalikan',
         status: 'Dikembalikan',
-        returnDate: new Date().toISOString(),
+        returnDate: nowIso,
         daysLate: daysLate,
         fineAmount: fineAmount,
         bookCondition: condition
@@ -618,10 +710,20 @@ async function processReturn(event, backendId) {
             }
         }
 
+        // Otomatis Check-Out dari Buku Tamu
+        const peminjamName = loan.loanMember || loan.memberName || '';
+        const autoCheckedOut = typeof autoCheckOutVisitorFromReturn === 'function'
+            ? await autoCheckOutVisitorFromReturn(peminjamName, nowIso)
+            : false;
+
+        const baseMsg = fineAmount > 0
+            ? `Buku dikembalikan (${condition}) • Denda: ${formatRupiah(fineAmount)}`
+            : `Buku berhasil dikembalikan (Kondisi: ${condition})!`;
+
         showToast(
-            fineAmount > 0
-                ? `Buku dikembalikan (${condition}) • Denda: ${formatRupiah(fineAmount)}`
-                : `Buku berhasil dikembalikan (Kondisi: ${condition})!`,
+            autoCheckedOut
+                ? `${baseMsg} & Otomatis Check-Out Buku Tamu!`
+                : baseMsg,
             "success"
         );
         renderCurrentSection();
