@@ -16,7 +16,7 @@ function renderSettingsSection() {
         <div class="space-y-6 max-w-4xl">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">Pengaturan Sistem</h2>
-                <p class="text-gray-500 text-sm">Atur identitas perpustakaan, tampilan tema, dan aturan sirkulasi peminjaman.</p>
+                <p class="text-gray-500 text-sm">Atur identitas perpustakaan, aturan sirkulasi, serta backup & restore data.</p>
             </div>
 
             <form onsubmit="saveSettings(event)" class="space-y-6">
@@ -63,6 +63,9 @@ function renderSettingsSection() {
                             </div>
                         </div>
                     </div>
+                    <p class="text-xs text-amber-600 flex items-center gap-1.5 pt-1">
+                        <span>⚠️</span> Pengaturan denda saat ini diatur di ${formatRupiah(denda)}/hari
+                    </p>
                 </div>
 
                 <div>
@@ -71,8 +74,300 @@ function renderSettingsSection() {
                     </button>
                 </div>
             </form>
+
+            <!-- PANEL BACKUP, EXPORT & IMPORT DATA (SESUAI DESAIN LAMA) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span>💾</span> Backup, Export & Import Data
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">Kelola data sistem secara massal dari sini.</p>
+                </div>
+
+                <!-- Baris 1: Export CSV & Backup JSON -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button type="button" onclick="exportAllDataCSV()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-colors">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Semua Data (CSV)
+                    </button>
+                    <button type="button" onclick="backupAllDataJSON()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-colors">
+                        <i data-lucide="hard-drive-download" class="w-4 h-4"></i> Backup Aman (JSON)
+                    </button>
+                </div>
+
+                <!-- Baris 2: Impor Data Buku -->
+                <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+                    <div>
+                        <h4 class="font-bold text-emerald-800 text-sm flex items-center gap-2">
+                            <i data-lucide="book-plus" class="w-4 h-4"></i> Impor Data Buku dari Excel / CSV
+                        </h4>
+                        <p class="text-xs text-emerald-700 mt-0.5">Tambahkan banyak buku sekaligus ke Koleksi Buku.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="file" id="settingsImportBookInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleDirectImportBooks(this)">
+                        <button type="button" onclick="document.getElementById('settingsImportBookInput').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Pilih File Excel / CSV
+                        </button>
+                        <button type="button" onclick="downloadBookTemplate()" class="w-full bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                            <i data-lucide="file-down" class="w-4 h-4"></i> Unduh Template Buku
+                        </button>
+                    </div>
+                    <div id="settingsBookImportStatus" class="hidden text-xs font-medium text-emerald-800"></div>
+                </div>
+
+                <!-- Baris 3: Impor Data Anggota -->
+                <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
+                    <div>
+                        <h4 class="font-bold text-blue-800 text-sm flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4"></i> Impor Data Anggota dari Excel / CSV
+                        </h4>
+                        <p class="text-xs text-blue-700 mt-0.5">Daftarkan banyak anggota (siswa) sekaligus.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input type="file" id="settingsImportMemberInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleDirectImportMembers(this)">
+                        <button type="button" onclick="document.getElementById('settingsImportMemberInput').click()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Pilih File Excel / CSV
+                        </button>
+                        <button type="button" onclick="downloadMemberTemplate()" class="w-full bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+                            <i data-lucide="file-down" class="w-4 h-4"></i> Unduh Template Anggota
+                        </button>
+                    </div>
+                    <div id="settingsMemberImportStatus" class="hidden text-xs font-medium text-blue-800"></div>
+                </div>
+
+                <!-- Baris 4: Restore JSON -->
+                <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2.5">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                            <i data-lucide="refresh-ccw" class="w-4 h-4 text-blue-600"></i> Restore setelah pembaruan
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Pilih file backup JSON. Data akan ditambahkan ke Database.</p>
+                    </div>
+                    <div class="bg-white p-2.5 rounded-xl border border-gray-200">
+                        <input type="file" id="restoreJsonInput" accept=".json" onchange="handleRestoreJSON(this)" class="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gray-300 file:text-xs file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 cursor-pointer">
+                    </div>
+                    <div id="restoreJsonStatus" class="hidden text-xs font-medium text-blue-700"></div>
+                </div>
+            </div>
         </div>
     `;
+}
+
+// --- FUNGSI BACKUP, EXPORT, IMPORT & RESTORE ---
+
+function exportAllDataCSV() {
+    if (!appState.allRecords || appState.allRecords.length === 0) {
+        showToast("Belum ada data di sistem untuk diexport.", "error");
+        return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(appState.allRecords);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Semua Data");
+    const dateTag = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Export_Semua_Data_Perpus_${dateTag}.csv`, { bookType: "csv" });
+    showToast("Semua data berhasil diexport ke CSV!", "success");
+}
+
+function backupAllDataJSON() {
+    if (!appState.allRecords || appState.allRecords.length === 0) {
+        showToast("Belum ada data untuk dibackup.", "error");
+        return;
+    }
+
+    const backupPayload = {
+        appName: defaultConfig.libraryName || "PerpusWeb",
+        exportedAt: new Date().toISOString(),
+        totalRecords: appState.allRecords.length,
+        records: appState.allRecords
+    };
+
+    const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateTag = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `Backup_Perpus_${dateTag}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("File Backup JSON berhasil diunduh!", "success");
+}
+
+function handleDirectImportBooks(inputEl) {
+    if (!inputEl.files || !inputEl.files.length) return;
+    const statusEl = document.getElementById('settingsBookImportStatus');
+    if (statusEl) {
+        statusEl.classList.remove('hidden');
+        statusEl.textContent = "Membaca file buku...";
+    }
+
+    const file = inputEl.files[0];
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+            if (rows.length === 0) {
+                showToast("File Excel / CSV buku kosong!", "error");
+                if (statusEl) statusEl.classList.add('hidden');
+                inputEl.value = '';
+                return;
+            }
+
+            let successCount = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (statusEl) statusEl.textContent = `Mengimpor buku ${i + 1} dari ${rows.length}...`;
+
+                const newBook = {
+                    bookBarcode: String(row.Barcode || row.Kode || row.bookBarcode || ('BK-' + Date.now() + '-' + i)),
+                    bookTitle: String(row.Judul || row.Title || row.bookTitle || 'Tanpa Judul'),
+                    bookAuthor: String(row.Pengarang || row.Author || row.bookAuthor || '-'),
+                    bookPublisher: String(row.Penerbit || row.Publisher || row.bookPublisher || '-'),
+                    bookYear: String(row.Tahun || row.Year || row.bookYear || ''),
+                    bookCategory: String(row.Kategori || row.Category || row.bookCategory || 'Lainnya'),
+                    bookShelf: String(row.Rak || row.Shelf || row.bookShelf || '-'),
+                    bookStock: Number(row.Stok || row.Stock || row.bookStock || 1),
+                    type: 'book',
+                    timestamp: new Date().toISOString()
+                };
+
+                const res = await window.dataSdk.sendData('create', newBook);
+                if (res && res.success) {
+                    appState.allRecords.push(newBook);
+                    successCount++;
+                }
+            }
+
+            if (statusEl) statusEl.textContent = `Selesai: ${successCount} dari ${rows.length} buku berhasil ditambahkan.`;
+            showToast(`Berhasil mengimpor ${successCount} buku!`, "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal memproses file buku.", "error");
+            if (statusEl) statusEl.classList.add('hidden');
+        }
+        inputEl.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function handleDirectImportMembers(inputEl) {
+    if (!inputEl.files || !inputEl.files.length) return;
+    const statusEl = document.getElementById('settingsMemberImportStatus');
+    if (statusEl) {
+        statusEl.classList.remove('hidden');
+        statusEl.textContent = "Membaca file anggota...";
+    }
+
+    const file = inputEl.files[0];
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+            if (rows.length === 0) {
+                showToast("File Excel / CSV anggota kosong!", "error");
+                if (statusEl) statusEl.classList.add('hidden');
+                inputEl.value = '';
+                return;
+            }
+
+            let successCount = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (statusEl) statusEl.textContent = `Mengimpor anggota ${i + 1} dari ${rows.length}...`;
+
+                const codeVal = String(row.ID || row.NIS || ('A-' + (1000 + i)));
+                const newMember = {
+                    id: codeVal,
+                    memberCode: codeVal,
+                    memberName: String(row.Nama || row.Name || 'Tanpa Nama'),
+                    memberClass: String(row.Kelas || row.Peran || row.Class || '-'),
+                    memberPhone: String(row.Telepon || row.HP || row.Phone || '-'),
+                    memberAddress: String(row.Alamat || row.Address || ''),
+                    type: 'member',
+                    timestamp: new Date().toISOString()
+                };
+
+                const res = await window.dataSdk.sendData('create', newMember);
+                if (res && res.success) {
+                    appState.allRecords.push(newMember);
+                    successCount++;
+                }
+            }
+
+            if (statusEl) statusEl.textContent = `Selesai: ${successCount} dari ${rows.length} anggota berhasil ditambahkan.`;
+            showToast(`Berhasil mengimpor ${successCount} anggota!`, "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal memproses file anggota.", "error");
+            if (statusEl) statusEl.classList.add('hidden');
+        }
+        inputEl.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function handleRestoreJSON(inputEl) {
+    if (!inputEl.files || !inputEl.files.length) return;
+    const statusEl = document.getElementById('restoreJsonStatus');
+    const file = inputEl.files[0];
+
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        try {
+            const parsed = JSON.parse(e.target.result);
+            const recordsToRestore = Array.isArray(parsed) ? parsed : (parsed.records || []);
+
+            if (!Array.isArray(recordsToRestore) || recordsToRestore.length === 0) {
+                showToast("Format JSON tidak valid atau kosong!", "error");
+                inputEl.value = '';
+                return;
+            }
+
+            if (!confirm(`Ditemukan ${recordsToRestore.length} data dalam file backup. Tambahkan ke database sekarang?`)) {
+                inputEl.value = '';
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.classList.remove('hidden');
+                statusEl.textContent = `Memulihkan 0 dari ${recordsToRestore.length} data...`;
+            }
+
+            let restoredCount = 0;
+            for (let i = 0; i < recordsToRestore.length; i++) {
+                const item = { ...recordsToRestore[i] };
+                delete item.__backendId; // Biarkan backend membuat ID baru agar tidak bentrok
+                if (!item.type) continue;
+
+                if (statusEl) {
+                    statusEl.textContent = `Memulihkan data ${i + 1} dari ${recordsToRestore.length}...`;
+                }
+
+                const res = await window.dataSdk.sendData('create', item);
+                if (res && res.success) {
+                    appState.allRecords.push(item);
+                    restoredCount++;
+                }
+            }
+
+            if (statusEl) {
+                statusEl.textContent = `Restore selesai: ${restoredCount} dari ${recordsToRestore.length} data berhasil ditambahkan.`;
+            }
+            showToast(`Restore berhasil! ${restoredCount} data ditambahkan.`, "success");
+        } catch (err) {
+            console.error(err);
+            showToast("File JSON rusak atau tidak dapat dibaca.", "error");
+        }
+        inputEl.value = '';
+    };
+    reader.readAsText(file);
 }
 
 async function saveSettings(event) {
@@ -93,7 +388,6 @@ async function saveSettings(event) {
         type: 'setting'
     };
 
-    // 1. Simpan ke localStorage & perbarui variabel global langsung
     localStorage.setItem('librarySettings', JSON.stringify(settings));
     Object.assign(defaultConfig, settings);
     document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
@@ -101,7 +395,6 @@ async function saveSettings(event) {
     const sidebarTitle = document.getElementById('sidebarLibName');
     if (sidebarTitle) sidebarTitle.textContent = settings.libraryName;
 
-    // 2. Sinkronkan ke Google Sheets jika API tersedia
     try {
         const existingSetting = appState.allRecords.find(r => r.type === 'setting');
         if (existingSetting && existingSetting.__backendId) {
@@ -122,247 +415,6 @@ async function saveSettings(event) {
         btn.innerText = "Simpan Semua Pengaturan";
     }
     showToast("Pengaturan berhasil disimpan!", "success");
+    renderCurrentSection();
 }
 
-// ==========================================
-// 2. MANAJEMEN USER (USERS & ROLES)
-// ==========================================
-
-function renderUsersSection() {
-    const users = getRecordsByType('user');
-    let rowsHtml = '';
-
-    users.forEach((u, index) => {
-        const username = u.username || u.userName || '-';
-        const fullName = u.fullName || u.userFullName || u.name || '-';
-        const role = (u.role || u.userRole || 'petugas').toLowerCase();
-        const targetId = u.__backendId || u.id || username;
-
-        const roleBadge = role === 'admin'
-            ? `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">ADMIN</span>`
-            : `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">${role.toUpperCase()}</span>`;
-
-        rowsHtml += `
-            <tr class="border-b hover:bg-gray-50 transition-colors">
-                <td class="p-3 text-center text-gray-500">${index + 1}</td>
-                <td class="p-3 font-medium text-gray-800">${fullName}</td>
-                <td class="p-3 font-mono text-xs text-gray-600">${username}</td>
-                <td class="p-3">${roleBadge}</td>
-                <td class="p-3 text-center whitespace-nowrap">
-                    <button onclick="editUser('${targetId}')" class="text-blue-600 hover:text-blue-800 mx-1 font-medium text-xs bg-blue-50 px-2.5 py-1.5 rounded-lg">Edit</button>
-                    <button onclick="deleteUser('${targetId}')" class="text-red-600 hover:text-red-800 mx-1 font-medium text-xs bg-red-50 px-2.5 py-1.5 rounded-lg">Hapus</button>
-                </td>
-            </tr>
-        `;
-    });
-
-    if (users.length === 0) {
-        rowsHtml = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada data user di database. Tambahkan akun admin/petugas pertama Anda.</td></tr>`;
-    }
-
-    return `
-        <div class="space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Manajemen User</h2>
-                    <p class="text-gray-500 text-sm">Kelola akun login dan hak akses petugas perpustakaan.</p>
-                </div>
-                <button onclick="showAddUserModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm transition-colors">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah User
-                </button>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-700 text-xs uppercase tracking-wider border-b">
-                            <tr>
-                                <th class="p-3 w-14 text-center">No</th>
-                                <th class="p-3">Nama Lengkap</th>
-                                <th class="p-3">Username</th>
-                                <th class="p-3">Role / Hak Akses</th>
-                                <th class="p-3 w-36 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function showAddUserModal() {
-    const formHtml = `
-        <form onsubmit="saveUser(event)" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
-                <input type="text" id="userFullName" required placeholder="Contoh: Rina Kartika" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
-                <input type="text" id="userUsername" required placeholder="Username untuk login" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                <input type="password" id="userPassword" required placeholder="Minimal 4 karakter" class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Role / Hak Akses *</label>
-                <select id="userRole" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    <option value="petugas">Petugas (Sirkulasi, Buku, Anggota, Tamu, Laporan)</option>
-                    <option value="admin">Admin (Akses Penuh termasuk Manajemen User & Pengaturan)</option>
-                </select>
-            </div>
-            
-            <div class="pt-4 flex justify-end gap-3 border-t mt-6">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-sm">Batal</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm">Simpan User</button>
-            </div>
-        </form>
-    `;
-    openModal("Tambah User Baru", formHtml);
-}
-
-async function saveUser(event) {
-    event.preventDefault();
-
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerText;
-    submitBtn.innerText = "Menyimpan...";
-    submitBtn.disabled = true;
-
-    const usernameVal = document.getElementById('userUsername').value.trim();
-
-    // Cek duplikat username
-    const exists = getRecordsByType('user').some(u => (u.username || u.userName || '').toLowerCase() === usernameVal.toLowerCase());
-    if (exists) {
-        showToast("Username sudah digunakan!", "error");
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
-        return;
-    }
-
-    const newUser = {
-        fullName: document.getElementById('userFullName').value.trim(),
-        username: usernameVal,
-        password: document.getElementById('userPassword').value.trim(),
-        role: document.getElementById('userRole').value,
-        type: 'user',
-        timestamp: new Date().toISOString()
-    };
-
-    const result = await window.dataSdk.sendData('create', newUser);
-
-    if (result && result.success) {
-        appState.allRecords.push(newUser);
-        closeModal();
-        showToast("User baru berhasil ditambahkan!", "success");
-        renderCurrentSection();
-    } else {
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
-        showToast("Gagal menyimpan user", "error");
-    }
-}
-
-function editUser(backendId) {
-    const user = appState.allRecords.find(u => u.type === 'user' && (u.__backendId === backendId || u.id === backendId || u.username === backendId));
-    if (!user) {
-        showToast("Data user tidak ditemukan!", "error");
-        return;
-    }
-
-    const fullName = user.fullName || user.userFullName || user.name || '';
-    const username = user.username || user.userName || '';
-    const password = user.password || user.userPassword || '';
-    const role = (user.role || user.userRole || 'petugas').toLowerCase();
-
-    const formHtml = `
-        <form onsubmit="processUpdateUser(event, '${user.__backendId || username}')" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
-                <input type="text" id="editUserFullName" value="${fullName}" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
-                <input type="text" id="editUserUsername" value="${username}" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                <input type="text" id="editUserPassword" value="${password}" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Role / Hak Akses *</label>
-                <select id="editUserRole" required class="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    <option value="petugas" ${role === 'petugas' ? 'selected' : ''}>Petugas</option>
-                    <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
-                </select>
-            </div>
-            
-            <div class="pt-4 flex justify-end gap-3 border-t mt-6">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-sm">Batal</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm">Update User</button>
-            </div>
-        </form>
-    `;
-    openModal("Edit Data User", formHtml);
-}
-
-async function processUpdateUser(event, backendId) {
-    event.preventDefault();
-
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    submitBtn.innerText = "Mengupdate...";
-    submitBtn.disabled = true;
-
-    const existingUser = appState.allRecords.find(u => u.type === 'user' && (u.__backendId === backendId || u.username === backendId)) || {};
-
-    const updatedPayload = {
-        ...existingUser,
-        __backendId: existingUser.__backendId || backendId,
-        fullName: document.getElementById('editUserFullName').value.trim(),
-        username: document.getElementById('editUserUsername').value.trim(),
-        password: document.getElementById('editUserPassword').value.trim(),
-        role: document.getElementById('editUserRole').value,
-        type: 'user'
-    };
-
-    const result = await window.dataSdk.sendData('update', updatedPayload);
-
-    if (result && result.success) {
-        appState.allRecords = appState.allRecords.map(record =>
-            (record.type === 'user' && (record.__backendId === backendId || record.username === backendId)) ? updatedPayload : record
-        );
-        closeModal();
-        showToast("Data user berhasil diupdate!", "success");
-        renderCurrentSection();
-    } else {
-        submitBtn.innerText = "Update User";
-        submitBtn.disabled = false;
-        showToast("Gagal mengupdate user", "error");
-    }
-}
-
-async function deleteUser(backendId) {
-    const current = window.loggedInUser || {};
-    if (current.id === backendId || current.username === backendId) {
-        showToast("Anda tidak dapat menghapus akun yang sedang digunakan login!", "error");
-        return;
-    }
-
-    if (confirm("Apakah Anda yakin ingin menghapus user ini?")) {
-        const payload = { __backendId: backendId };
-        const result = await window.dataSdk.sendData('delete', payload);
-
-        if (result && result.success) {
-            appState.allRecords = appState.allRecords.filter(record => !(record.type === 'user' && (record.__backendId === backendId || record.username === backendId)));
-            showToast("User berhasil dihapus!", "success");
-            renderCurrentSection();
-        } else {
-            showToast("Gagal menghapus user", "error");
-        }
-    }
-}
