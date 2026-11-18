@@ -87,8 +87,7 @@ function renderSidebarNav() {
 
             return `
                 <button data-menu="${item.key}" title="${item.label}"
-                    onclick="navigateTo('${item.key}'); if(window.innerWidth < 768) toggleMobileSidebar();" 
-                    class="sidebar-item flex items-center ${isSlim ? 'md:justify-center' : ''} gap-3.5 w-full text-left px-3.5 py-3 transition-all duration-200 ${activeClass}">
+                    onclick="navigateTo('${item.key}'); if(window.innerWidth < 768) toggleMobileSidebar(true);"                    class="sidebar-item flex items-center ${isSlim ? 'md:justify-center' : ''} gap-3.5 w-full text-left px-3.5 py-3 transition-all duration-200 ${activeClass}">
                     <i data-lucide="${item.icon}" class="w-5 h-5 flex-shrink-0"></i>
                     <span class="sidebar-label truncate text-sm ${isSlim ? 'md:hidden' : ''}">${item.label}</span>
                 </button>
@@ -427,7 +426,7 @@ function renderDashboardHome() {
                         </div>
                     </div>
 
-                    <!-- Radial Progress Ketersediaan -->
+                  <!-- Radial Progress Ketersediaan -->
                     <div class="bg-white p-5 rounded-3xl shadow-xs border border-indigo-50 text-center">
                         <h3 class="text-xs font-bold text-slate-700 text-left">Ketersediaan Buku di Rak</h3>
                         <p class="text-[11px] text-slate-400 text-left mb-3">Persentase stok siap dipinjam</p>
@@ -442,7 +441,8 @@ function renderDashboardHome() {
                                 <span class="text-xl font-extrabold text-slate-800">${availablePercent}%</span>
                             </div>
                         </div>
-                        onclick="navigateTo('${item.key}'); if(window.innerWidth < 768) toggleMobileSidebar(true);"                            Kelola Sirkulasi
+                        <button onclick="navigateTo('loans')" class="mt-3 w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors">
+                            Kelola Sirkulasi
                         </button>
                     </div>
                 </div>
