@@ -155,7 +155,7 @@ function renderDashboard() {
             <!-- AREA KONTEN KANAN -->
             <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f4f6fc]">
                 
-                <!-- HEADER RINGKAS DENGAN RUNNING TEXT POB -->
+                <!-- HEADER RINGKAS DENGAN RUNNING TEXT POB & WATERMARK PERUSAHAAN -->
                 <header class="bg-white/80 backdrop-blur-md border-b border-indigo-100/60 px-4 md:px-6 py-3 flex items-center justify-between gap-4 z-10">
                     <!-- Kiri: Tombol Menu Mobile & Judul -->
                     <div class="flex items-center gap-3 flex-shrink-0">
@@ -168,23 +168,46 @@ function renderDashboard() {
                         </div>
                     </div>
 
-                    <!-- Tengah: Running Text POB (Muncul di Layar Tablet & Desktop) -->
+                    <!-- Tengah: Running Text POB + Watermark Perusahaan -->
                     <div class="hidden lg:flex flex-1 min-w-0 items-center bg-indigo-50/75 border border-indigo-100 rounded-full px-3 py-1.5 shadow-2xs">
                         <span class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wider uppercase flex-shrink-0 mr-2.5 shadow-2xs">
                             POB INFO
                         </span>
-                        <div class="pob-marquee-wrapper flex-1 text-xs font-medium text-indigo-900">
+                        <div class="pob-marquee-wrapper flex-1 text-xs font-medium text-indigo-950">
                             <div class="pob-marquee-track">
-                                <span class="mx-6">📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi & Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong></span>
-                                <span class="mx-6">✨ Budayakan Literasi Digital: Pinjam, Baca, dan Kembalikan Buku Tepat Waktu</span>
-                                <span class="mx-6">🔔 Pastikan melakukan sinkronisasi data secara berkala untuk menjaga keakuratan stok koleksi perpustakaan</span>
-                                <!-- Duplikat agar putaran teks menyambung tanpa jeda kosong -->
-                                <span class="mx-6">📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi & Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong></span>
-                                <span class="mx-6">✨ Budayakan Literasi Digital: Pinjam, Baca, dan Kembalikan Buku Tepat Waktu</span>
-                                <span class="mx-6">🔔 Pastikan melakukan sinkronisasi data secara berkala untuk menjaga keakuratan stok koleksi perpustakaan</span>
+                                <!-- Set 1 -->
+                                <span class="mx-6">
+                                    📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi &amp; Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong> &nbsp;&bull;&nbsp;
+                                    ⚡ <strong>DANISH SHOP</strong> — Smart School &amp; Library Management System &nbsp;&bull;&nbsp;
+                                    Official Developer: <span class="wm-gold">MOMO SERVICE</span> &nbsp;&bull;&nbsp;
+                                    Melayani Jasa Pembuatan <strong>Aplikasi Apa Saja &amp; Sistem Full Custom</strong> (Web, Android, Sekolah, Instansi, Kasir/POS &amp; Perusahaan) Sesuai Permintaan &nbsp;&bull;&nbsp;
+                                    Konsultasi &amp; Order WA: <strong>0812-7361-3498</strong> &nbsp;&bull;&nbsp;
+                                    Hak Cipta &copy; 2026 <span class="wm-gold">MOMO SERVICE</span> &mdash; <em>All Rights Reserved</em>
+                                </span>
+                                <!-- Set 2 (Duplikat untuk loop mulus tanpa putus) -->
+                                <span class="mx-6">
+                                    📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi &amp; Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong> &nbsp;&bull;&nbsp;
+                                    ⚡ <strong>DANISH SHOP</strong> — Smart School &amp; Library Management System &nbsp;&bull;&nbsp;
+                                    Official Developer: <span class="wm-gold">MOMO SERVICE</span> &nbsp;&bull;&nbsp;
+                                    Melayani Jasa Pembuatan <strong>Aplikasi Apa Saja &amp; Sistem Full Custom</strong> (Web, Android, Sekolah, Instansi, Kasir/POS &amp; Perusahaan) Sesuai Permintaan &nbsp;&bull;&nbsp;
+                                    Konsultasi &amp; Order WA: <strong>0812-7361-3498</strong> &nbsp;&bull;&nbsp;
+                                    Hak Cipta &copy; 2026 <span class="wm-gold">MOMO SERVICE</span> &mdash; <em>All Rights Reserved</em>
+                                </span>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Kanan: Tombol Sync & Profil User -->
+                    <div class="flex items-center gap-2.5 flex-shrink-0 ml-auto lg:ml-0">
+                        <button onclick="refreshDataFromServer()" title="Sinkronkan Data" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </button>
+                        <div class="flex items-center gap-2 bg-white border border-indigo-100 px-3 py-1.5 rounded-full shadow-xs">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span id="userNameDisplay" class="text-xs font-semibold text-slate-700">Loading...</span>
+                        </div>
+                    </div>
+                </header>
 
                     <!-- Kanan: Tombol Sync & Profil User -->
                     <div class="flex items-center gap-2.5 flex-shrink-0 ml-auto lg:ml-0">

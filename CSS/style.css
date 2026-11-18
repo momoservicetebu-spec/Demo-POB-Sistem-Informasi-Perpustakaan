@@ -311,7 +311,7 @@ html, body {
   }
 }
 
-/* Animasi Running Text Header POB */
+/* Animasi Running Text Header POB & Watermark Perusahaan */
 @keyframes pobMarqueeScroll {
   0% {
     transform: translateX(0%);
@@ -333,9 +333,15 @@ html, body {
   display: inline-flex;
   align-items: center;
   width: max-content;
-  animation: pobMarqueeScroll 26s linear infinite;
+  animation: pobMarqueeScroll 38s linear infinite;
 }
 
 .pob-marquee-wrapper:hover .pob-marquee-track {
   animation-play-state: paused;
+}
+
+.wm-gold {
+  color: #d97706;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
