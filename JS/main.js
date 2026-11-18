@@ -27,8 +27,13 @@ function renderCurrentSection() {
                 : '<div class="p-6 text-red-500">File JS/katalog_perpusnas.js belum dimuat di index.html!</div>';
             break;
         case 'digital_library': content.innerHTML = typeof renderDigitalLibrarySection === 'function' ? renderDigitalLibrarySection() : ''; break;
-        case 'smartboard_gamifikasi': content.innerHTML = typeof renderSmartboardGamifikasiSection === 'function' ? renderSmartboardGamifikasiSection() : ''; break;
-        case 'members': content.innerHTML = renderMembersSection(); break;
+        case 'smartboard':
+        case 'smartboard_gamifikasi':
+        case 'gamifikasi':
+            content.innerHTML = typeof renderSmartBoardSection === 'function'
+                ? renderSmartBoardSection()
+                : '<div class="p-6 text-red-600 font-semibold">File JS/smartboard_gamifikasi.js belum dimuat atau terdapat error sintaks.</div>';
+            break;        case 'members': content.innerHTML = renderMembersSection(); break;
         case 'loans': content.innerHTML = renderCirculationSection(); break;
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
         case 'reports': content.innerHTML = typeof renderReportsSection === 'function' ? renderReportsSection() : ''; break;
