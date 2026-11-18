@@ -224,10 +224,3 @@ function exportVisitorsCSV() {
     XLSX.writeFile(wb, "Laporan_Buku_Tamu.xlsx");
     showToast("File berhasil diunduh!", "success");
 }
-function showAddVisitorModal() {
-    alert("Form Isi Buku Tamu akan muncul di sini.");
-}
-
-function exportVisitorsCSV() {
-    alert("Fitur Export CSV akan dihubungkan dengan library xlsx.");
-}

@@ -189,8 +189,3 @@ async function processReturn(backendId) {
     }
 }
 
-function processReturn(id) {
-    if(confirm("Proses pengembalian buku untuk transaksi: " + id + "?")) {
-        alert("Buku berhasil dikembalikan (Simulasi).");
-    }
-}

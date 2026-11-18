@@ -239,21 +239,3 @@ async function processUpdateBook(event, backendId) {
     }
 }
 
-function deleteBook(id) {
-    if(confirm("Apakah Anda yakin ingin menghapus buku ini?")) {
-        // Filter out buku yang dihapus
-        appState.allRecords = appState.allRecords.filter(record => record.id !== id);
-        showToast("Buku berhasil dihapus!", "success");
-        renderCurrentSection(); // Refresh tabel
-    }
-}
-
-function editBook(id) {
-    alert("Menyiapkan edit untuk buku kode: " + id);
-}
-
-function deleteBook(id) {
-    if(confirm("Apakah Anda yakin ingin menghapus buku ini?")) {
-        alert("Buku terhapus (Simulasi): " + id);
-    }
-}

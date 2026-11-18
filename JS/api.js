@@ -1,15 +1,22 @@
 // JS/api.js
 
-// GANTI DENGAN URL DEPLOYMENT GOOGLE APPS SCRIPT ANDA
-const SCRIPT_URL = 'MASUKKAN_URL_WEB_APP_GAS_ANDA_DI_SINI'; 
+// URL dari index.html Anda sebelumnya
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnRb6cqYz0yJ1oDzIHqwLZiSU77KCc1BJ8az07iA9xbjbti5m13q9EaY-veLwkah5f/exec'; 
 
 window.dataSdk = {
-    // 1. Mengambil seluruh data dari GAS (Memanggil doGet)
+    // 1. Mengambil seluruh data dari GAS
     fetchAll: async function() {
         try {
             const response = await fetch(SCRIPT_URL);
-            const data = await response.json();
-            return data;
+            const result = await response.json();
+            
+            // GAS biasanya mengembalikan data di dalam properti 'data'
+            if (result.status === 'success' && result.data) {
+                return result.data;
+            } else if (Array.isArray(result)) {
+                return result;
+            }
+            return [];
         } catch (error) {
             console.error("Gagal mengambil data:", error);
             showToast("Gagal terhubung ke server", "error");
@@ -17,18 +24,19 @@ window.dataSdk = {
         }
     },
 
-    // 2. Mengirim data ke GAS (Memanggil doPost: create / update / delete)
+    // 2. Mengirim data ke GAS (create / update / delete)
     sendData: async function(action, payload) {
         try {
-            // Berikan ID unik untuk backend jika belum ada
             if (action === 'create' && !payload.__backendId) {
                 payload.__backendId = 'ID-' + Date.now();
             }
 
+            // GAS membutuhkan request dikirim sebagai teks biasa untuk menghindari blokir CORS
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                // Mode no-cors kadang diperlukan tergantung setup GAS, 
-                // tapi coba tanpa no-cors dulu agar bisa baca balikan {success: true}
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
                 body: JSON.stringify({
                     action: action,
                     payload: payload

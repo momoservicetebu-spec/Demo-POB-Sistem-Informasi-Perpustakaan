@@ -212,24 +212,3 @@ async function deleteMember(backendId) {
     }
 }
 
-function editMember(id) {
-    alert("Menyiapkan edit untuk anggota ID: " + id);
-}
-
-function deleteMember(id) {
-    if(confirm("Apakah Anda yakin ingin menghapus anggota ini?")) {
-        appState.allRecords = appState.allRecords.filter(record => record.id !== id);
-        showToast("Anggota berhasil dihapus!", "success");
-        renderCurrentSection();
-    }
-}
-
-function editMember(id) {
-    alert("Menyiapkan edit untuk anggota ID: " + id);
-}
-
-function deleteMember(id) {
-    if(confirm("Apakah Anda yakin ingin menghapus anggota ini?")) {
-        alert("Anggota terhapus (Simulasi): " + id);
-    }
-}
