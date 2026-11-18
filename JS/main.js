@@ -1,13 +1,14 @@
 // JS/main.js
 
-const currentUser = window.loggedInUser;
+// Lindungi halaman utama: wajib memiliki sesi login valid dari JS/auth.js
+const currentUser = typeof requireAuth === 'function' ? requireAuth() : window.loggedInUser;
 
 function renderCurrentSection() {
     const content = document.getElementById('mainContent');
     if (!content) return;
 
     // Cek hak akses sebelum merender halaman
-    if (!canAccessMenu(appState.currentSection)) {
+    if (typeof canAccessMenu === 'function' && !canAccessMenu(appState.currentSection)) {
         appState.currentSection = 'dashboard';
     }
 
@@ -45,16 +46,26 @@ async function refreshDataFromServer() {
         const dataDariServer = await window.dataSdk.fetchAll();
         appState.allRecords = dataDariServer || [];
 
-        // Sinkronkan pengaturan dari server jika ada record dengan type === 'setting'
+        // Sinkronkan pengaturan & kop sekolah dari server jika ada record dengan type === 'setting'
         const serverSetting = appState.allRecords.find(r => r.type === 'setting');
         if (serverSetting) {
             defaultConfig.libraryName = serverSetting.libraryName || defaultConfig.libraryName;
             defaultConfig.librarySubtitle = serverSetting.librarySubtitle || defaultConfig.librarySubtitle;
             defaultConfig.primaryColor = serverSetting.primaryColor || defaultConfig.primaryColor;
+            defaultConfig.kopHeader1 = serverSetting.kopHeader1 || defaultConfig.kopHeader1;
+            defaultConfig.kopSchoolName = serverSetting.kopSchoolName || defaultConfig.kopSchoolName;
+            defaultConfig.kopAddress = serverSetting.kopAddress || defaultConfig.kopAddress;
+            defaultConfig.kopContact = serverSetting.kopContact || defaultConfig.kopContact;
+            defaultConfig.kopLogoLeft = serverSetting.kopLogoLeft || defaultConfig.kopLogoLeft;
+            defaultConfig.kopLogoRight = serverSetting.kopLogoRight || defaultConfig.kopLogoRight;
             defaultConfig.finePerDay = Number(serverSetting.finePerDay) || defaultConfig.finePerDay;
             defaultConfig.maxLoanDays = Number(serverSetting.maxLoanDays) || defaultConfig.maxLoanDays;
+
             localStorage.setItem('librarySettings', JSON.stringify(defaultConfig));
             document.documentElement.style.setProperty('--primary-color', defaultConfig.primaryColor);
+
+            const sidebarTitle = document.getElementById('sidebarLibName');
+            if (sidebarTitle) sidebarTitle.textContent = defaultConfig.libraryName;
         }
 
         renderCurrentSection();
@@ -88,10 +99,3 @@ async function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
-
-function logout() {
-    if (confirm('Apakah Anda yakin ingin keluar?')) {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-    }
-}

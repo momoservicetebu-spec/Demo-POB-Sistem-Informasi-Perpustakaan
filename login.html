@@ -1,46 +1,276 @@
-<!doctype html>
-<html lang="id" class="h-full bg-gray-50">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Sistem Perpustakaan</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="CSS/style.css">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
-</head>
-<body class="h-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Login - Sistem Informasi Perpustakaan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes cloudDrift {
+            0%, 100% { transform: translateX(0px); }
+            50% { transform: translateX(14px); }
+        }
+        @keyframes bulbGlow {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.8)); }
+            50% { opacity: 0.65; filter: drop-shadow(0 0 2px rgba(250, 204, 21, 0.3)); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(28px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-28px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
 
-  <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 w-full max-w-md">
-    <div class="text-center mb-6">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white font-bold text-2xl mb-3 shadow-md">
-        P
-      </div>
-      <h2 id="loginTitle" class="text-2xl font-bold text-gray-800">PerpusWeb</h2>
-      <p id="loginSubtitle" class="text-sm text-gray-500 mt-1">Silakan masuk menggunakan akun Anda</p>
+        .anim-left { animation: slideInLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-right { animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-float { animation: floatSlow 4.5s ease-in-out infinite; }
+        .anim-cloud { animation: cloudDrift 6s ease-in-out infinite; }
+        .anim-bulb { animation: bulbGlow 2.4s ease-in-out infinite; }
+        .anim-shake { animation: shakeError 0.4s ease-in-out; }
+
+        /* Input garis bawah minimalis sesuai inspirasi desain */
+        .login-underline-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.45);
+            color: #ffffff;
+            transition: border-color 0.25s ease;
+        }
+        .login-underline-input::placeholder {
+            color: rgba(224, 231, 255, 0.65);
+        }
+        .login-underline-input:focus {
+            outline: none;
+            border-bottom-color: #ffffff;
+        }
+        /* Mencegah auto-zoom di layar smartphone */
+        @media (max-width: 767px) {
+            .login-underline-input { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#e9eef8] flex items-center justify-center p-0 md:p-6 overflow-x-hidden">
+
+    <!-- KONTAINER UTAMA SPLIT SCREEN -->
+    <div class="w-full max-w-5xl min-h-screen md:min-h-[600px] bg-white md:rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+
+        <!-- BAGIAN KIRI (7 KOLOM): ILUSTRASI PERPUSTAKAAN BERANIMASI -->
+        <div class="lg:col-span-7 bg-white p-6 md:p-10 flex flex-col justify-between relative overflow-hidden anim-left">
+            <!-- Header Nama Sekolah -->
+            <div class="flex items-center justify-between">
+                <span id="loginSchoolBadge" class="text-xs font-bold tracking-wider uppercase text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                    PerpusWeb Digital
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium">v1.1.0</span>
+            </div>
+
+            <!-- Judul Welcome & Ilustrasi SVG -->
+            <div class="my-auto py-4 text-center">
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide text-[#ef4444] uppercase mb-2">
+                    WELCOME TO LIBRARY
+                </h1>
+                <p id="loginLibSubtitle" class="text-xs md:text-sm text-slate-500 mb-4">
+                    Sistem Informasi & Sirkulasi Perpustakaan Sekolah
+                </p>
+
+                <!-- Ilustrasi Isometrik Perpustakaan Beranimasi -->
+                <div class="max-w-md mx-auto anim-float select-none">
+                    <svg viewBox="0 0 500 370" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Awan Kiri & Kanan -->
+                        <g class="anim-cloud" fill="#5eead4" opacity="0.75">
+                            <path d="M45 165 Q45 150 60 150 Q68 135 85 142 Q100 142 100 158 Q112 160 110 172 L45 172 Z"/>
+                            <path d="M165 95 Q165 82 178 82 Q186 70 200 76 Q212 76 212 90 Q222 92 220 102 L165 102 Z"/>
+                            <path d="M395 160 Q395 148 408 148 Q415 136 428 142 Q440 142 440 154 Q450 156 448 166 L395 166 Z"/>
+                        </g>
+
+                        <!-- Lampu Ide Berkilau -->
+                        <g class="anim-bulb" transform="translate(230, 32)">
+                            <line x1="20" y1="0" x2="20" y2="8" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="2" y1="10" x2="8" y2="15" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="38" y1="10" x2="32" y2="15" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="0" y1="26" x2="7" y2="26" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="40" y1="26" x2="33" y2="26" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M11 26 A9 9 0 1 1 29 26 Q29 33 24 37 L16 37 Q11 33 11 26 Z" fill="#fde047" stroke="#eab308" stroke-width="1.5"/>
+                            <rect x="16" y="38" width="8" height="5" rx="1.5" fill="#1e3a8a"/>
+                        </g>
+
+                        <!-- Tumpukan Buku Bawah (Tosca) -->
+                        <g>
+                            <polygon points="120,255 250,180 355,240 225,315" fill="#14b8a6"/>
+                            <polygon points="120,255 225,315 225,335 120,275" fill="#0f766e"/>
+                            <polygon points="225,315 355,240 355,258 225,335" fill="#f1f5f9"/>
+                        </g>
+
+                        <!-- Tumpukan Buku Tengah (Biru Tua) -->
+                        <g>
+                            <polygon points="110,222 245,145 350,205 215,282" fill="#2563eb"/>
+                            <polygon points="110,222 215,282 215,302 110,242" fill="#1e40af"/>
+                            <polygon points="215,282 350,205 350,223 215,302" fill="#e2e8f0"/>
+                            <!-- Pembatas Buku Merah -->
+                            <polygon points="150,245 162,252 162,282 156,274 150,280" fill="#ef4444"/>
+                        </g>
+
+                        <!-- Tumpukan Buku Atas (Oranye-Coral) -->
+                        <g>
+                            <polygon points="100,188 235,112 335,170 200,246" fill="#f97316"/>
+                            <polygon points="100,188 200,246 200,264 100,206" fill="#ea580c"/>
+                            <polygon points="200,246 335,170 335,186 200,264" fill="#ffffff"/>
+                        </g>
+
+                        <!-- Rak Buku Kiri Berdiri -->
+                        <g>
+                            <polygon points="68,110 155,62 155,205 68,253" fill="#115e59"/>
+                            <polygon points="76,118 147,78 147,198 76,238" fill="#134e4a"/>
+                            <!-- Buku-buku warna-warni di rak kiri -->
+                            <polygon points="82,145 92,139 92,115 82,121" fill="#facc15"/>
+                            <polygon points="94,138 104,132 104,108 94,114" fill="#fb7185"/>
+                            <polygon points="106,131 116,125 116,101 106,107" fill="#38bdf8"/>
+                            <polygon points="118,124 128,118 128,94 118,100" fill="#a78bfa"/>
+                            <polygon points="82,195 94,188 94,164 82,171" fill="#34d399"/>
+                            <polygon points="96,187 108,180 108,156 96,163" fill="#f97316"/>
+                        </g>
+
+                        <!-- Rak Buku Kanan Berdiri (Kuning Emas & Biru) -->
+                        <g>
+                            <polygon points="315,62 410,115 410,245 315,192" fill="#eab308"/>
+                            <polygon points="410,115 426,106 426,236 410,245" fill="#1d4ed8"/>
+                            <polygon points="315,62 331,53 426,106 410,115" fill="#3b82f6"/>
+                            <polygon points="325,82 400,124 400,175 325,133" fill="#fef08a"/>
+                            <polygon points="334,125 346,132 346,106 334,99" fill="#ef4444"/>
+                            <polygon points="349,133 361,140 361,114 349,107" fill="#0ea5e9"/>
+                            <polygon points="364,142 376,149 376,123 364,116" fill="#6366f1"/>
+                        </g>
+
+                        <!-- Tangga Merah & Karakter Pembaca -->
+                        <g stroke="#dc2626" stroke-width="3.5" stroke-linecap="round">
+                            <line x1="108" y1="190" x2="108" y2="278"/>
+                            <line x1="128" y1="180" x2="128" y2="268"/>
+                            <line x1="108" y1="205" x2="128" y2="195"/>
+                            <line x1="108" y1="223" x2="128" y2="213"/>
+                            <line x1="108" y1="241" x2="128" y2="231"/>
+                            <line x1="108" y1="259" x2="128" y2="249"/>
+                        </g>
+
+                        <!-- Karakter 1 (Naik tangga mengambil buku) -->
+                        <g transform="translate(95, 148)">
+                            <circle cx="14" cy="10" r="7" fill="#1e293b"/>
+                            <rect x="8" y="18" width="12" height="20" rx="4" fill="#facc15"/>
+                            <line x1="11" y1="38" x2="10" y2="54" stroke="#1e3a8a" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="17" y1="38" x2="19" y2="52" stroke="#1e3a8a" stroke-width="4" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Karakter 2 (Duduk membaca di atas buku) -->
+                        <g transform="translate(178, 178)">
+                            <circle cx="14" cy="10" r="7" fill="#1e293b"/>
+                            <rect x="8" y="18" width="13" height="18" rx="4" fill="#3b82f6"/>
+                            <polygon points="2,24 12,28 12,35 2,31" fill="#fde047"/>
+                            <line x1="10" y1="35" x2="4" y2="48" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="16" y1="35" x2="12" y2="50" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Karakter 3 (Berdiri di rak kanan) -->
+                        <g transform="translate(278, 108)">
+                            <circle cx="14" cy="10" r="7" fill="#1e293b"/>
+                            <rect x="8" y="18" width="12" height="22" rx="4" fill="#334155"/>
+                            <line x1="11" y1="40" x2="11" y2="58" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="17" y1="40" x2="17" y2="58" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Footer Kiri -->
+            <p class="text-[11px] text-slate-400 text-center">
+                © 2026 Point OF Book (POB) • Transaksi Buku Digital Sekolah
+            </p>
+        </div>
+
+        <!-- BAGIAN KANAN (5 KOLOM): PANEL LOGIN INDIGO -->
+        <div id="loginPanelCard" class="lg:col-span-5 bg-gradient-to-br from-[#5256e8] to-[#3f42c4] text-white p-8 md:p-10 flex flex-col justify-center anim-right">
+            <div class="max-w-sm w-full mx-auto space-y-7">
+                <div class="text-center space-y-1.5">
+                    <h2 class="text-2xl font-bold tracking-tight">Login Page</h2>
+                    <p class="text-xs text-indigo-100/85">Welcome! Login to your account</p>
+                </div>
+
+                <!-- Pesan Error / Lockout -->
+                <div id="loginAlertBox" class="hidden p-3 rounded-xl bg-red-500/20 border border-red-300/40 text-xs text-white text-center"></div>
+
+                <!-- Form Login -->
+                <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-6">
+                    <!-- Username -->
+                    <div class="flex items-end gap-3.5">
+                        <div class="w-9 h-9 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label for="loginUsername" class="block text-[11px] font-medium text-indigo-100 mb-1">Username</label>
+                            <input type="text" id="loginUsername" required autocomplete="username"
+                                placeholder="Enter Username"
+                                class="login-underline-input w-full py-1.5 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="flex items-end gap-3.5">
+                        <div class="w-9 h-9 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1 relative">
+                            <label for="loginPassword" class="block text-[11px] font-medium text-indigo-100 mb-1">Password</label>
+                            <input type="password" id="loginPassword" required autocomplete="current-password"
+                                placeholder="Enter Password"
+                                class="login-underline-input w-full py-1.5 pr-8 text-sm">
+                            <button type="button" onclick="togglePasswordVisibility()" title="Tampilkan / Sembunyikan Password"
+                                class="absolute right-1 bottom-1.5 text-indigo-200 hover:text-white">
+                                <i id="eyePasswordIcon" data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Sesuai Inspirasi -->
+                    <div class="pt-3 space-y-3">
+                        <button type="submit" id="btnLoginSubmit"
+                            class="w-full py-3 rounded-full bg-[#0f296e] hover:bg-[#091c52] text-white font-bold text-xs tracking-wider uppercase shadow-lg transition-all active:scale-95">
+                            LOGIN
+                        </button>
+
+                        <button type="button" onclick="showLoginHelpInfo()"
+                            class="w-full py-3 rounded-full bg-[#ff4b4b] hover:bg-[#e63939] text-white font-bold text-xs tracking-wider uppercase shadow-lg transition-all active:scale-95">
+                            BANTUAN AKSES
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Status Koneksi Server -->
+                <div class="text-center pt-2">
+                    <span id="serverAuthStatus" class="inline-flex items-center gap-1.5 text-[11px] text-indigo-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Sistem Autentikasi Siap
+                    </span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="loginError" class="hidden mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm text-center"></div>
-    
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Username / ID</label>
-        <input type="text" id="username" placeholder="Masukkan username" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition" required>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        <input type="password" id="password" placeholder="Masukkan password" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition" required>
-      </div>
-      <button type="submit" id="loginBtn" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-60">
-        Masuk
-      </button>
-    </form>
-  </div>
-  
-  <!-- Kurir API dibutuhkan agar halaman login bisa membaca tabel user dari Google Sheets -->
-  <script src="JS/api.js"></script>
-  <script src="JS/login.js"></script>
+    <script src="JS/api.js"></script>
+    <script src="JS/auth.js"></script>
+    <script src="JS/login.js"></script>
+    <script>
+        if (window.lucide) lucide.createIcons();
+    </script>
 </body>
 </html>

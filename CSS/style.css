@@ -237,3 +237,56 @@ html, body {
     justify-content: center;
   }
 }
+
+/* ==========================================
+   ANIMASI HALAMAN LOGIN PERPUSTAKAAN
+   ========================================== */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes cloudDrift {
+  0%, 100% { transform: translateX(0px); }
+  50% { transform: translateX(12px); }
+}
+
+@keyframes bulbGlow {
+  0%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.7)); }
+  50% { opacity: 0.75; transform: scale(1.08); filter: drop-shadow(0 0 14px rgba(250, 204, 21, 1)); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim-float {
+  animation: floatSlow 4.5s ease-in-out infinite;
+}
+
+.anim-cloud {
+  animation: cloudDrift 6s ease-in-out infinite;
+}
+
+.anim-cloud-delay {
+  animation: cloudDrift 7.5s ease-in-out infinite reverse;
+}
+
+.anim-bulb {
+  transform-origin: center;
+  animation: bulbGlow 2.4s ease-in-out infinite;
+}
+
+.anim-login-panel {
+  animation: slideInRight 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-hero-text {
+  animation: fadeInUp 0.6s ease-out forwards;
+}

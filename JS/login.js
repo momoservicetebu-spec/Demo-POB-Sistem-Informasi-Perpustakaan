@@ -1,79 +1,146 @@
 // JS/login.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Jika sudah login, langsung lempar ke dashboard
-    if (localStorage.getItem('currentUser')) {
-        window.location.href = 'index.html';
+    // Jika user sudah memiliki sesi login aktif, langsung arahkan ke index.html
+    if (typeof redirectIfAuthenticated === 'function') {
+        redirectIfAuthenticated();
+    }
+
+    // Tampilkan nama sekolah yang tersimpan di pengaturan lokal (jika ada)
+    try {
+        const saved = JSON.parse(localStorage.getItem('librarySettings') || '{}');
+        const badgeEl = document.getElementById('loginSchoolBadge');
+        const subEl = document.getElementById('loginLibSubtitle');
+        if (badgeEl && (saved.kopSchoolName || saved.libraryName)) {
+            badgeEl.textContent = saved.kopSchoolName || saved.libraryName;
+        }
+        if (subEl && saved.librarySubtitle) {
+            subEl.textContent = saved.librarySubtitle;
+        }
+    } catch (e) {}
+});
+
+function togglePasswordVisibility() {
+    const passInput = document.getElementById('loginPassword');
+    const eyeIcon = document.getElementById('eyePasswordIcon');
+    if (!passInput) return;
+
+    const isPassword = passInput.type === 'password';
+    passInput.type = isPassword ? 'text' : 'password';
+    if (eyeIcon) {
+        eyeIcon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+function showLoginAlert(message, isError = true) {
+    const box = document.getElementById('loginAlertBox');
+    const panel = document.getElementById('loginPanelCard');
+    if (!box) return;
+
+    box.textContent = message;
+    box.classList.remove('hidden', 'bg-red-500/25', 'border-red-300/40', 'bg-emerald-500/25', 'border-emerald-300/40');
+
+    if (isError) {
+        box.classList.add('bg-red-500/25', 'border-red-300/40');
+        if (panel) {
+            panel.classList.remove('anim-shake');
+            void panel.offsetWidth; // trigger reflow animasi getar
+            panel.classList.add('anim-shake');
+        }
+    } else {
+        box.classList.add('bg-emerald-500/25', 'border-emerald-300/40');
+    }
+}
+
+function showLoginHelpInfo() {
+    showLoginAlert('Hubungi Administrator Perpustakaan untuk pembuatan akun baru atau reset password.', false);
+}
+
+async function handleLoginSubmit(event) {
+    event.preventDefault();
+
+    // Cek apakah akun sedang terkunci karena salah password berulang kali
+    const lockState = checkLoginLockout();
+    if (lockState.locked) {
+        showLoginAlert(`Terlalu banyak percobaan gagal. Silakan coba lagi dalam ${lockState.remainingSec} detik.`);
         return;
     }
 
-    // 2. Muat nama perpustakaan dari pengaturan jika sudah tersimpan
-    const savedSettings = JSON.parse(localStorage.getItem('librarySettings') || '{}');
-    if (savedSettings.libraryName) {
-        const titleEl = document.getElementById('loginTitle');
-        if (titleEl) titleEl.textContent = savedSettings.libraryName;
+    const usernameInput = document.getElementById('loginUsername').value.trim();
+    const passwordInput = document.getElementById('loginPassword').value.trim();
+    const btn = document.getElementById('btnLoginSubmit');
+
+    if (!usernameInput || !passwordInput) {
+        showLoginAlert('Username dan Password wajib diisi!');
+        return;
     }
-});
 
-const loginForm = document.getElementById('loginForm');
+    btn.disabled = true;
+    btn.textContent = 'MEMVERIFIKASI...';
 
-if (loginForm) {
-    loginForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
+    try {
+        let usersList = [];
 
-        const usernameInput = document.getElementById('username').value.trim();
-        const passwordInput = document.getElementById('password').value.trim();
-        const loginBtn = document.getElementById('loginBtn');
-        const errorBox = document.getElementById('loginError');
-
-        errorBox.classList.add('hidden');
-        loginBtn.disabled = true;
-        loginBtn.textContent = 'Memverifikasi akun...';
-
-        try {
-            // Ambil seluruh record dari Google Apps Script
-            const records = await window.dataSdk.fetchAll();
-            const users = records.filter(r => r.type === 'user');
-
-            // Cari kecocokan user di database (mendukung properti username/userName dan password/userPassword)
-            let matchedUser = users.find(u => {
-                const dbUser = (u.username || u.userName || '').toString().trim();
-                const dbPass = (u.password || u.userPassword || '').toString().trim();
-                return dbUser.toLowerCase() === usernameInput.toLowerCase() && dbPass === passwordInput;
-            });
-
-            // Fallback akun default jika tabel user di database belum diisi sama sekali
-            if (!matchedUser && users.length === 0 && usernameInput === 'admin' && passwordInput === '123456') {
-                matchedUser = {
-                    __backendId: 'DEFAULT_ADMIN',
-                    username: 'admin',
-                    fullName: 'Administrator Perpustakaan',
-                    role: 'admin'
-                };
+        // Ambil daftar user dari server (Google Apps Script / dataSdk)
+        if (window.dataSdk && typeof window.dataSdk.fetchAll === 'function') {
+            const allData = await window.dataSdk.fetchAll();
+            if (Array.isArray(allData)) {
+                usersList = allData.filter(item => item.type === 'user');
             }
-
-            if (matchedUser) {
-                const sessionUser = {
-                    id: matchedUser.__backendId || matchedUser.id || 'USER_1',
-                    username: matchedUser.username || matchedUser.userName || usernameInput,
-                    fullName: matchedUser.fullName || matchedUser.userFullName || matchedUser.name || usernameInput,
-                    role: (matchedUser.role || matchedUser.userRole || 'petugas').toLowerCase()
-                };
-
-                localStorage.setItem('currentUser', JSON.stringify(sessionUser));
-                window.location.href = 'index.html';
-            } else {
-                errorBox.textContent = 'Username atau password salah!';
-                errorBox.classList.remove('hidden');
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Masuk';
-            }
-        } catch (err) {
-            console.error('Error saat login:', err);
-            errorBox.textContent = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
-            errorBox.classList.remove('hidden');
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Masuk';
         }
-    });
+
+        // Cocokkan username & password
+        let matchedUser = usersList.find(u =>
+            (u.username || u.userName || '').toLowerCase() === usernameInput.toLowerCase() &&
+            String(u.password || u.userPassword || '') === passwordInput
+        );
+
+        // Fallback akun bawaan jika database user belum memiliki admin sama sekali
+        if (!matchedUser && usersList.length === 0 && usernameInput.toLowerCase() === 'admin' && passwordInput === 'admin123') {
+            matchedUser = {
+                id: 'default-admin',
+                username: 'admin',
+                fullName: 'Administrator Sistem',
+                role: 'admin',
+                userStatus: 'aktif'
+            };
+        }
+
+        if (!matchedUser) {
+            const attempt = recordFailedLoginAttempt();
+            const sisa = Math.max(0, MAX_LOGIN_ATTEMPTS - attempt.count);
+            if (sisa === 0) {
+                showLoginAlert('Akun dikunci sementara selama 2 menit karena 5x gagal login.');
+            } else {
+                showLoginAlert(`Username atau Password salah! (Sisa percobaan: ${sisa}x)`);
+            }
+            btn.disabled = false;
+            btn.textContent = 'LOGIN';
+            return;
+        }
+
+        // Cek apakah status akun dinonaktifkan oleh admin
+        const statusAkun = (matchedUser.userStatus || matchedUser.status || 'aktif').toLowerCase();
+        if (statusAkun === 'nonaktif') {
+            showLoginAlert('Akun Anda sedang dinonaktifkan. Hubungi Administrator.');
+            btn.disabled = false;
+            btn.textContent = 'LOGIN';
+            return;
+        }
+
+        // Berhasil login -> Simpan sesi & arahkan ke dashboard
+        createAuthSession(matchedUser);
+        showLoginAlert('Login berhasil! Mengalihkan ke dashboard...', false);
+
+        setTimeout(() => {
+            window.location.replace('index.html');
+        }, 450);
+
+    } catch (err) {
+        console.error('Login error:', err);
+        showLoginAlert('Gagal terhubung ke server autentikasi. Periksa koneksi internet Anda.');
+        btn.disabled = false;
+        btn.textContent = 'LOGIN';
+    }
 }
