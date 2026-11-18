@@ -21,14 +21,18 @@ function renderCurrentSection() {
     switch (appState.currentSection) {
         case 'dashboard': content.innerHTML = renderDashboardHome(); break;
         case 'books': content.innerHTML = renderBooksSection(); break;
-        case 'catalog_ddc': content.innerHTML = renderCatalogDdcSection(); break;
+        case 'catalog_ddc':
+            content.innerHTML = typeof renderCatalogPerpusnasSection === 'function'
+                ? renderCatalogPerpusnasSection()
+                : '<div class="p-6 text-red-500">File JS/katalog_perpusnas.js belum dimuat di index.html!</div>';
+            break;
         case 'members': content.innerHTML = renderMembersSection(); break;
         case 'loans': content.innerHTML = renderCirculationSection(); break;
         case 'visitors': content.innerHTML = renderVisitorsSection(); break;
-        case 'reports': content.innerHTML = typeof renderReportsSection === 'function' ? renderReportsSection() : '<div class="p-6 text-gray-500">Modul Laporan siap diisi di Tahap 3.</div>'; break;
-        case 'statistics': content.innerHTML = typeof renderStatisticsSection === 'function' ? renderStatisticsSection() : '<div class="p-6 text-gray-500">Modul Statistik belum dimuat.</div>'; break;
-        case 'stock_opname': content.innerHTML = typeof renderStockOpnameSection === 'function' ? renderStockOpnameSection() : '<div class="p-6 text-gray-500">Modul Stok Opname siap diisi di Tahap 3.</div>'; break;
-        case 'users': content.innerHTML = typeof renderUsersSection === 'function' ? renderUsersSection() : '<div class="p-6 text-gray-500">Modul Manajemen User siap diisi di Tahap 3.</div>'; break;
+        case 'reports': content.innerHTML = typeof renderReportsSection === 'function' ? renderReportsSection() : ''; break;
+        case 'statistics': content.innerHTML = typeof renderStatisticsSection === 'function' ? renderStatisticsSection() : ''; break;
+        case 'stock_opname': content.innerHTML = typeof renderStockOpnameSection === 'function' ? renderStockOpnameSection() : ''; break;
+        case 'users': content.innerHTML = typeof renderUsersSection === 'function' ? renderUsersSection() : ''; break;
         case 'settings': content.innerHTML = renderSettingsSection(); break;
         default:
             content.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Halaman tidak ditemukan.</div>`;
