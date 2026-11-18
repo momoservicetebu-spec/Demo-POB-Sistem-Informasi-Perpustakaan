@@ -2,25 +2,15 @@
 <html lang="id" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>Dashboard Perpustakaan</title>
-  
-  <!-- 1. PENJAGA KEAMANAN HALAMAN (GATEKEEPER) -->
-  <script>
-    const savedUser = localStorage.getItem('currentUser');
-    if (!savedUser) {
-        window.location.href = 'login.html';
-    } else {
-        window.loggedInUser = JSON.parse(savedUser);
-    }
-  </script>
 
-  <!-- 2. SDK & Library -->
+  <!-- 1. SDK & Library -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
   
-  <!-- 3. CSS & Font -->
+  <!-- 2. CSS & Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="CSS/style.css">
   <style>

@@ -2,11 +2,10 @@
 
 const AUTH_SESSION_KEY = 'perpus_auth_session';
 const AUTH_ATTEMPT_KEY = 'perpus_login_attempts';
-const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // Sesi berlaku 8 jam
+const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 jam
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 2 * 60 * 1000; // Kunci sementara 2 menit jika 5x salah
+const LOCKOUT_DURATION_MS = 2 * 60 * 1000; // 2 menit
 
-// 1. Cek apakah percobaan login sedang terkunci (Brute-Force Protection)
 function checkLoginLockout() {
     const raw = localStorage.getItem(AUTH_ATTEMPT_KEY);
     if (!raw) return { locked: false, remainingSec: 0 };
@@ -14,8 +13,7 @@ function checkLoginLockout() {
     try {
         const data = JSON.parse(raw);
         if (data.lockedUntil && Date.now() < data.lockedUntil) {
-            const remainingSec = Math.ceil((data.lockedUntil - Date.now()) / 1000);
-            return { locked: true, remainingSec };
+            return { locked: true, remainingSec: Math.ceil((data.lockedUntil - Date.now()) / 1000) };
         }
         if (data.lockedUntil && Date.now() >= data.lockedUntil) {
             localStorage.removeItem(AUTH_ATTEMPT_KEY);
@@ -27,11 +25,11 @@ function checkLoginLockout() {
 }
 
 function recordFailedLoginAttempt() {
-    const raw = localStorage.getItem(AUTH_ATTEMPT_KEY);
     let data = { count: 0, lockedUntil: null };
-    if (raw) {
-        try { data = JSON.parse(raw); } catch (e) {}
-    }
+    try {
+        const raw = localStorage.getItem(AUTH_ATTEMPT_KEY);
+        if (raw) data = JSON.parse(raw);
+    } catch (e) {}
 
     data.count = (data.count || 0) + 1;
     if (data.count >= MAX_LOGIN_ATTEMPTS) {
@@ -45,7 +43,7 @@ function resetLoginAttempts() {
     localStorage.removeItem(AUTH_ATTEMPT_KEY);
 }
 
-// 2. Buat & simpan token sesi setelah berhasil login
+// Buat sesi & sinkronkan ke semua key lama agar JS/script.js tidak me-redirect balik
 function createAuthSession(userObj) {
     const sessionPayload = {
         id: userObj.__backendId || userObj.id || userObj.username,
@@ -57,27 +55,34 @@ function createAuthSession(userObj) {
         expiresAt: Date.now() + SESSION_DURATION_MS
     };
 
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(sessionPayload));
-    // Sinkronkan juga ke key lama jika masih dipakai modul lain
-    localStorage.setItem('loggedInUser', JSON.stringify(sessionPayload));
+    const jsonStr = JSON.stringify(sessionPayload);
+    localStorage.setItem(AUTH_SESSION_KEY, jsonStr);
+    localStorage.setItem('loggedInUser', jsonStr);
+    localStorage.setItem('currentUser', jsonStr);
     window.loggedInUser = sessionPayload;
     resetLoginAttempts();
     return sessionPayload;
 }
 
-// 3. Ambil sesi aktif & verifikasi apakah masih valid
+// Ambil sesi HANYA jika memiliki token resmi & belum kadaluarsa
 function getValidAuthSession() {
-    const raw = localStorage.getItem(AUTH_SESSION_KEY) || localStorage.getItem('loggedInUser');
+    const raw = localStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return null;
 
     try {
         const session = JSON.parse(raw);
-        if (!session || !session.username) return null;
-
+        if (!session || !session.username || !session.token) {
+            clearAuthSession();
+            return null;
+        }
         if (session.expiresAt && Date.now() > session.expiresAt) {
             clearAuthSession();
             return null;
         }
+
+        // Pastikan key lama ikut terisi
+        localStorage.setItem('loggedInUser', raw);
+        localStorage.setItem('currentUser', raw);
         window.loggedInUser = session;
         return session;
     } catch (e) {
@@ -89,28 +94,38 @@ function getValidAuthSession() {
 function clearAuthSession() {
     localStorage.removeItem(AUTH_SESSION_KEY);
     localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('currentUser');
     window.loggedInUser = null;
 }
 
-// 4. Pelindung Halaman Utama (Panggil di awal index.html / main.js)
+// Pelindung halaman utama (index.html)
 function requireAuth() {
+    const isLoginPage = window.location.pathname.toLowerCase().includes('login.html');
+    if (isLoginPage) return null;
+
     const session = getValidAuthSession();
     if (!session) {
+        clearAuthSession();
         window.location.replace('login.html');
         return null;
     }
     return session;
 }
 
-// 5. Pelindung Halaman Login (Jika sudah login, langsung arahkan ke dashboard)
+// Pelindung halaman login (login.html)
 function redirectIfAuthenticated() {
+    const isLoginPage = window.location.pathname.toLowerCase().includes('login.html');
+    if (!isLoginPage) return;
+
     const session = getValidAuthSession();
-    if (session) {
+    if (session && session.token) {
         window.location.replace('index.html');
+    } else {
+        // Bersihkan sisa sesi lama yang rusak agar tidak memicu loop
+        clearAuthSession();
     }
 }
 
-// 6. Pembagian Hak Akses Menu Berdasarkan Role
 function canAccessMenu(menuKey) {
     const user = getValidAuthSession();
     if (!user) return false;
@@ -120,11 +135,9 @@ function canAccessMenu(menuKey) {
     if (role === 'kasir' || role === 'kasir buku') {
         return ['dashboard', 'books', 'members', 'loans'].includes(menuKey);
     }
-    // Default: pustakawan / petugas
     return !['users', 'settings'].includes(menuKey);
 }
 
-// 7. Logout Aman
 function logout() {
     if (confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
         clearAuthSession();

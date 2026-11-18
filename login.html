@@ -40,26 +40,42 @@
         .anim-bulb { animation: bulbGlow 2.4s ease-in-out infinite; }
         .anim-shake { animation: shakeError 0.4s ease-in-out; }
 
-        /* Input garis bawah minimalis sesuai inspirasi desain */
+        /* Input kapsul membulat (Glass Pill) lembut & bebas kotak putih Autofill */
         .login-underline-input {
-            background: transparent;
-            border: none;
-            border-bottom: 1.5px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.14);
+            border: 1.5px solid rgba(255, 255, 255, 0.28);
+            border-radius: 9999px;
             color: #ffffff;
-            transition: border-color 0.25s ease;
+            padding: 0.6rem 1.15rem;
+            transition: all 0.25s ease;
         }
         .login-underline-input::placeholder {
-            color: rgba(224, 231, 255, 0.65);
+            color: rgba(224, 231, 255, 0.7);
         }
         .login-underline-input:focus {
             outline: none;
-            border-bottom-color: #ffffff;
+            background: rgba(255, 255, 255, 0.22);
+            border-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
         }
+
+        /* Menghilangkan kotak putih kaku saat browser mengisi otomatis (Autofill) */
+        .login-underline-input:-webkit-autofill,
+        .login-underline-input:-webkit-autofill:hover,
+        .login-underline-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0px 1000px #494dd6 inset !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+            border-radius: 9999px !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         /* Mencegah auto-zoom di layar smartphone */
         @media (max-width: 767px) {
             .login-underline-input { font-size: 16px !important; }
         }
     </style>
+    
 </head>
 <body class="min-h-screen bg-[#e9eef8] flex items-center justify-center p-0 md:p-6 overflow-x-hidden">
 
@@ -210,36 +226,35 @@
 
                 <!-- Form Login -->
                 <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-6">
-                    <!-- Username -->
-                    <div class="flex items-end gap-3.5">
-                        <div class="w-9 h-9 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm">
+                <!-- Username -->
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-4">
                             <i data-lucide="user" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1">
-                            <label for="loginUsername" class="block text-[11px] font-medium text-indigo-100 mb-1">Username</label>
+                            <label for="loginUsername" class="block text-[11px] font-medium text-indigo-100 mb-1.5 ml-3">Username</label>
                             <input type="text" id="loginUsername" required autocomplete="username"
                                 placeholder="Enter Username"
-                                class="login-underline-input w-full py-1.5 text-sm">
+                                class="login-glass-input w-full text-sm">
                         </div>
                     </div>
 
                     <!-- Password -->
-                    <div class="flex items-end gap-3.5">
-                        <div class="w-9 h-9 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-full bg-white text-[#4b4fe0] flex items-center justify-center flex-shrink-0 shadow-sm mt-4">
                             <i data-lucide="lock" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1 relative">
-                            <label for="loginPassword" class="block text-[11px] font-medium text-indigo-100 mb-1">Password</label>
+                            <label for="loginPassword" class="block text-[11px] font-medium text-indigo-100 mb-1.5 ml-3">Password</label>
                             <input type="password" id="loginPassword" required autocomplete="current-password"
                                 placeholder="Enter Password"
-                                class="login-underline-input w-full py-1.5 pr-8 text-sm">
+                                class="login-glass-input w-full pr-10 text-sm">
                             <button type="button" onclick="togglePasswordVisibility()" title="Tampilkan / Sembunyikan Password"
-                                class="absolute right-1 bottom-1.5 text-indigo-200 hover:text-white">
+                                class="absolute right-3.5 bottom-2.5 text-indigo-100 hover:text-white">
                                 <i id="eyePasswordIcon" data-lucide="eye" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
-
                     <!-- Tombol Aksi Sesuai Inspirasi -->
                     <div class="pt-3 space-y-3">
                         <button type="submit" id="btnLoginSubmit"
