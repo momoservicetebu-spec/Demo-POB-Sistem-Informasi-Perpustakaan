@@ -209,18 +209,6 @@ function renderDashboard() {
                     </div>
                 </header>
 
-                    <!-- Kanan: Tombol Sync & Profil User -->
-                    <div class="flex items-center gap-2.5 flex-shrink-0 ml-auto lg:ml-0">
-                        <button onclick="refreshDataFromServer()" title="Sinkronkan Data" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                        </button>
-                        <div class="flex items-center gap-2 bg-white border border-indigo-100 px-3 py-1.5 rounded-full shadow-xs">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span id="userNameDisplay" class="text-xs font-semibold text-slate-700">Loading...</span>
-                        </div>
-                    </div>
-                </header>
-
                 <!-- KONTEN DINAMIS -->
                 <main class="flex-1 overflow-auto p-4 md:p-6" id="mainContent">
                 </main>
@@ -255,20 +243,35 @@ function buildDashboardCalendarHtml() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
-    // Kumpulkan tanggal jatuh tempo pinjaman aktif di bulan ini
+    // Kumpulkan pinjaman aktif & tanggal jatuh tempo
     const loans = getRecordsByType('loan');
     const dueDaysSet = new Set();
+    const activeDueList = [];
+
     loans.forEach(l => {
         const st = (l.loanStatus || l.status || '').toLowerCase();
         if (st !== 'dikembalikan' && st !== 'returned' && l.loanDueDate) {
             const d = new Date(l.loanDueDate);
-            if (d.getFullYear() === year && d.getMonth() === month) {
-                dueDaysSet.add(d.getDate());
+            if (!isNaN(d.getTime())) {
+                if (d.getFullYear() === year && d.getMonth() === month) {
+                    dueDaysSet.add(d.getDate());
+                }
+                activeDueList.push({
+                    memberName: l.memberName || l.borrowerName || 'Anggota',
+                    bookTitle: l.bookTitle || 'Buku',
+                    dueDate: d,
+                    dueStr: l.loanDueDate
+                });
             }
         }
     });
+
+    // Urutkan dari tanggal jatuh tempo paling dekat
+    activeDueList.sort((a, b) => a.dueDate - b.dueDate);
+    const upcomingDues = activeDueList.slice(0, 2);
 
     let cells = '';
     for (let i = 0; i < firstDay; i++) {
@@ -293,25 +296,56 @@ function buildDashboardCalendarHtml() {
         `;
     }
 
+    const upcomingHtml = upcomingDues.length > 0
+        ? upcomingDues.map(item => {
+            const isOverdue = item.dueDate < today;
+            const dateBadge = item.dueDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+            return `
+                <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-slate-700 truncate">${item.memberName}</p>
+                        <p class="text-[10px] text-slate-400 truncate">${item.bookTitle}</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${isOverdue ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}">
+                        ${dateBadge}
+                    </span>
+                </div>
+            `;
+        }).join('')
+        : `<div class="p-2.5 rounded-xl bg-slate-50 text-center text-[11px] text-slate-400">Tidak ada jatuh tempo aktif.</div>`;
+
     return `
-        <div class="flex items-center justify-between mb-3">
-            <button type="button" onclick="changeDashboardCalMonth(-1)" class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
-                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-            </button>
-            <span class="text-sm font-bold text-indigo-700">${monthNames[month]} ${year}</span>
-            <button type="button" onclick="changeDashboardCalMonth(1)" class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-        </div>
-        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 mb-1.5">
-            <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
-        </div>
-        <div class="grid grid-cols-7 gap-y-1 text-center">
-            ${cells}
-        </div>
-        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-600"></span> Hari ini</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></span> Jatuh tempo</span>
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <button type="button" onclick="changeDashboardCalMonth(-1)" class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <span class="text-sm font-bold text-indigo-700">${monthNames[month]} ${year}</span>
+                    <button type="button" onclick="changeDashboardCalMonth(1)" class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 mb-1.5">
+                    <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                </div>
+                <div class="grid grid-cols-7 gap-y-1 text-center">
+                    ${cells}
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-600"></span> Hari ini</span>
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full border border-orange-400 bg-orange-100"></span> Jatuh tempo</span>
+                </div>
+            </div>
+
+            <!-- Jadwal Jatuh Tempo Terdekat (Mengisi ruang bawah kalender) -->
+            <div class="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-700">Jatuh Tempo Terdekat</span>
+                    <button type="button" onclick="navigateTo('loans')" class="text-[10px] font-semibold text-indigo-600 hover:underline">Semua →</button>
+                </div>
+                ${upcomingHtml}
+            </div>
         </div>
     `;
 }
@@ -409,15 +443,21 @@ function renderDashboardHome() {
     const maxDaily = Math.max(1, ...last7Days.map(d => Math.max(d.loans, d.visitors)));
 
     const dailyBarsHtml = last7Days.map(d => {
-        const hVis = Math.max(12, Math.round((d.visitors / maxDaily) * 100));
-        const hLoan = Math.max(12, Math.round((d.loans / maxDaily) * 100));
+        const hVis = Math.max(14, Math.round((d.visitors / maxDaily) * 100));
+        const hLoan = Math.max(14, Math.round((d.loans / maxDaily) * 100));
         return `
-            <div class="flex-1 flex flex-col items-center gap-1.5">
-                <div class="w-full h-24 flex items-end justify-center gap-1">
-                    <div title="Pengunjung: ${d.visitors}" class="w-2.5 bg-orange-400 rounded-t-md transition-all" style="height: ${hVis}%"></div>
-                    <div title="Pinjaman: ${d.loans}" class="w-2.5 bg-indigo-200 rounded-t-md transition-all" style="height: ${hLoan}%"></div>
+            <div class="flex-1 flex flex-col items-center gap-2 group">
+                <div class="w-full h-32 px-1.5 pt-4 pb-1 rounded-2xl bg-slate-50/80 border border-slate-100/80 flex items-end justify-center gap-2 transition-colors group-hover:bg-indigo-50/40">
+                    <div class="flex flex-col items-center justify-end h-full flex-1 max-w-[22px]">
+                        <span class="text-[9px] font-bold text-orange-600 mb-1">${d.visitors}</span>
+                        <div title="Pengunjung: ${d.visitors}" class="w-full bg-orange-400 rounded-t-lg transition-all duration-300 shadow-2xs" style="height: ${hVis}%"></div>
+                    </div>
+                    <div class="flex flex-col items-center justify-end h-full flex-1 max-w-[22px]">
+                        <span class="text-[9px] font-bold text-indigo-600 mb-1">${d.loans}</span>
+                        <div title="Pinjaman: ${d.loans}" class="w-full bg-indigo-500 rounded-t-lg transition-all duration-300 shadow-2xs" style="height: ${hLoan}%"></div>
+                    </div>
                 </div>
-                <span class="text-[10px] font-medium text-slate-400">${d.label}</span>
+                <span class="text-[11px] font-semibold text-slate-600">${d.label}</span>
             </div>
         `;
     }).join('');
@@ -428,13 +468,13 @@ function renderDashboardHome() {
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-5">
                 
                 <!-- KOLOM 1 (3 col): Koleksi Buku & Sedang Dipinjam -->
-                <div class="xl:col-span-3 bg-white p-5 rounded-3xl shadow-xs border border-indigo-50 flex flex-col justify-between">
+                <div class="xl:col-span-3 bg-white p-5 rounded-3xl shadow-xs border border-indigo-50 flex flex-col justify-between gap-4">
                     <div>
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-slate-700">Koleksi & Sirkulasi</span>
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 text-indigo-600">Live</span>
                         </div>
-                        <div class="py-2">
+                        <div class="pt-1">
                             <div class="flex items-center gap-2">
                                 <span class="text-indigo-600 font-bold text-xl">↑</span>
                                 <span class="text-3xl font-extrabold text-slate-800">${totalEksemplar}</span>
@@ -443,7 +483,29 @@ function renderDashboardHome() {
                         </div>
                     </div>
 
-                    <div class="border-t border-slate-100 pt-3 mt-2">
+                    <!-- Rincian Tengah Mengisi Ruang Kosong -->
+                    <div class="bg-slate-50/90 border border-slate-100 rounded-2xl p-3 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Judul Katalog
+                            </span>
+                            <span class="font-bold text-slate-700">${books.length} judul</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sudah Kembali
+                            </span>
+                            <span class="font-bold text-emerald-600">${returnedLoansCount} transaksi</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-500 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full ${overdueLoans.length > 0 ? 'bg-red-500' : 'bg-slate-300'}"></span> Jatuh Tempo
+                            </span>
+                            <span class="font-bold ${overdueLoans.length > 0 ? 'text-red-600' : 'text-slate-600'}">${overdueLoans.length} buku</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3">
                         <div class="flex items-center gap-2">
                             <span class="text-orange-500 font-bold text-xl">↓</span>
                             <span class="text-3xl font-extrabold text-slate-800">${activeLoans.length}</span>
@@ -552,18 +614,18 @@ function renderDashboardHome() {
             <!-- BARIS BAWAH: GRAFIK AKTIVITAS HARIAN & AKSES CEPAT -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <!-- Grafik Batang 7 Hari Terakhir -->
-                <div class="lg:col-span-7 bg-white p-5 rounded-3xl shadow-xs border border-indigo-50">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="lg:col-span-7 bg-white p-5 rounded-3xl shadow-xs border border-indigo-50 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <div>
                             <h3 class="text-sm font-bold text-slate-800">Aktivitas Kunjungan & Peminjaman (7 Hari Terakhir)</h3>
                             <p class="text-xs text-slate-400">Perbandingan harian buku tamu dan transaksi peminjaman</p>
                         </div>
-                        <div class="flex items-center gap-3 text-[11px]">
+                        <div class="flex items-center gap-3 text-[11px] font-medium">
                             <span class="flex items-center gap-1.5 text-slate-600"><span class="w-2.5 h-2.5 rounded-xs bg-orange-400"></span> Pengunjung</span>
-                            <span class="flex items-center gap-1.5 text-slate-600"><span class="w-2.5 h-2.5 rounded-xs bg-indigo-200"></span> Pinjaman</span>
+                            <span class="flex items-center gap-1.5 text-slate-600"><span class="w-2.5 h-2.5 rounded-xs bg-indigo-500"></span> Pinjaman</span>
                         </div>
                     </div>
-                    <div class="flex items-end gap-2 pt-2">
+                    <div class="grid grid-cols-7 gap-2 sm:gap-3 pt-1">
                         ${dailyBarsHtml}
                     </div>
                 </div>
