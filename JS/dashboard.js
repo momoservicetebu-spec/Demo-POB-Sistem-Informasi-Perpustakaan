@@ -155,9 +155,10 @@ function renderDashboard() {
             <!-- AREA KONTEN KANAN -->
             <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f4f6fc]">
                 
-                <!-- HEADER RINGKAS -->
-                <header class="bg-white/80 backdrop-blur-md border-b border-indigo-100/60 px-4 md:px-6 py-3 flex items-center justify-between z-10">
-                    <div class="flex items-center gap-3">
+                <!-- HEADER RINGKAS DENGAN RUNNING TEXT POB -->
+                <header class="bg-white/80 backdrop-blur-md border-b border-indigo-100/60 px-4 md:px-6 py-3 flex items-center justify-between gap-4 z-10">
+                    <!-- Kiri: Tombol Menu Mobile & Judul -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
                         <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-xl text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
                             <i data-lucide="menu" class="w-5 h-5"></i>
                         </button>
@@ -167,7 +168,26 @@ function renderDashboard() {
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2.5 ml-auto">
+                    <!-- Tengah: Running Text POB (Muncul di Layar Tablet & Desktop) -->
+                    <div class="hidden lg:flex flex-1 min-w-0 items-center bg-indigo-50/75 border border-indigo-100 rounded-full px-3 py-1.5 shadow-2xs">
+                        <span class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wider uppercase flex-shrink-0 mr-2.5 shadow-2xs">
+                            POB INFO
+                        </span>
+                        <div class="pob-marquee-wrapper flex-1 text-xs font-medium text-indigo-900">
+                            <div class="pob-marquee-track">
+                                <span class="mx-6">📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi & Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong></span>
+                                <span class="mx-6">✨ Budayakan Literasi Digital: Pinjam, Baca, dan Kembalikan Buku Tepat Waktu</span>
+                                <span class="mx-6">🔔 Pastikan melakukan sinkronisasi data secara berkala untuk menjaga keakuratan stok koleksi perpustakaan</span>
+                                <!-- Duplikat agar putaran teks menyambung tanpa jeda kosong -->
+                                <span class="mx-6">📚 Selamat Datang di <strong>Point OF Book (POB)</strong> — Sistem Transaksi & Sirkulasi Buku Digital <strong>${defaultConfig.libraryName}</strong></span>
+                                <span class="mx-6">✨ Budayakan Literasi Digital: Pinjam, Baca, dan Kembalikan Buku Tepat Waktu</span>
+                                <span class="mx-6">🔔 Pastikan melakukan sinkronisasi data secara berkala untuk menjaga keakuratan stok koleksi perpustakaan</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kanan: Tombol Sync & Profil User -->
+                    <div class="flex items-center gap-2.5 flex-shrink-0 ml-auto lg:ml-0">
                         <button onclick="refreshDataFromServer()" title="Sinkronkan Data" class="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         </button>

@@ -310,3 +310,32 @@ html, body {
     pointer-events: none !important;
   }
 }
+
+/* Animasi Running Text Header POB */
+@keyframes pobMarqueeScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.pob-marquee-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.pob-marquee-track {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  animation: pobMarqueeScroll 26s linear infinite;
+}
+
+.pob-marquee-wrapper:hover .pob-marquee-track {
+  animation-play-state: paused;
+}
