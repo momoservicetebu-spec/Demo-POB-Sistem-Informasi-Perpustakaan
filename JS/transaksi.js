@@ -19,7 +19,11 @@ function calculateFine(dueDateStr, returnDateStr = null) {
 }
 
 function renderCirculationSection() {
-    const transactions = getRecordsByType('loan');
+    const transactions = [...getRecordsByType('loan')].sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.loanDate || 0).getTime();
+        const timeB = new Date(b.timestamp || b.loanDate || 0).getTime();
+        return timeB - timeA;
+    });
     const allBooks = getRecordsByType('book');
     let rowsHtml = '';
 
