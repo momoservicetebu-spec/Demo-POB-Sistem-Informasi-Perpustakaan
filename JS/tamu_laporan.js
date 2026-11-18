@@ -118,9 +118,11 @@ async function autoCheckOutVisitorFromReturn(peminjam, nowIso = new Date().toISO
 }
 
 function renderVisitorsSection() {
+    // Pastikan pengunjung yang melewati batas waktu langsung di-check-out otomatis
+    enforceAutoVisitorCheckOut(true);
+
     const visitors = getRecordsByType('visitor');
     const todayStr = new Date().toISOString().split('T')[0];
-
     let todayCount = 0;
     let activeCount = 0;
     let activeCardsHtml = '';
@@ -376,10 +378,10 @@ function showAddVisitorModal() {
                     class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-sm"></textarea>
             </div>
 
-            <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 leading-relaxed">
-                <strong>Check-In otomatis:</strong> Waktu check-in akan dicatat saat tombol "Check-In" diklik.
-            </div>
-            
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 leading-relaxed space-y-1">
+                <p><strong>Check-In otomatis:</strong> Waktu check-in dicatat saat tombol "Check-In Sekarang" diklik.</p>
+                <p><strong>Auto Check-Out:</strong> Jika lupa check-out, sistem otomatis menutup kunjungan setelah <strong>2 jam</strong> atau saat jam tutup perpustakaan (<strong>16:00</strong>).</p>
+            </div>            
             <div class="pt-2 flex items-center gap-3">
                 <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl font-semibold text-sm shadow-sm transition-colors">
                     ✓ Check-In Sekarang
@@ -991,4 +993,111 @@ async function autoCheckInVisitorReading(namaPembaca, judulBuku = '') {
         return true;
     }
     return false;
+}
+
+
+// ==========================================
+// ATURAN WAKTU AUTO CHECK-OUT BUKU TAMU
+// ==========================================
+const VISITOR_AUTO_CHECKOUT_RULES = {
+    maxDurationMinutes: 120, // Batas maksimal 1 sesi kunjungan (2 jam)
+    closingHour: 16,         // Jam tutup perpustakaan (16:00 WIB)
+    closingMinute: 0
+};
+
+let isRunningAutoVisitorCheckOut = false;
+
+function computeAutoCheckOutTimestamp(checkInIso) {
+    const start = new Date(checkInIso);
+    if (isNaN(start.getTime())) return null;
+
+    const now = new Date();
+    const maxByDuration = new Date(start.getTime() + VISITOR_AUTO_CHECKOUT_RULES.maxDurationMinutes * 60000);
+
+    // Jam tutup perpustakaan pada hari pengunjung check-in
+    const closingTimeSameDay = new Date(start);
+    closingTimeSameDay.setHours(
+        VISITOR_AUTO_CHECKOUT_RULES.closingHour,
+        VISITOR_AUTO_CHECKOUT_RULES.closingMinute,
+        0,
+        0
+    );
+
+    // Pilih waktu lebih awal antara batas durasi (2 jam) atau jam tutup (16:00)
+    // (Jika check-in dilakukan setelah jam tutup, gunakan batas durasi 2 jam)
+    const deadline = start < closingTimeSameDay
+        ? new Date(Math.min(maxByDuration.getTime(), closingTimeSameDay.getTime()))
+        : maxByDuration;
+
+    // Jika waktu sekarang sudah melewati batas deadline (atau sudah berganti hari)
+    const isDifferentDay = start.toDateString() !== now.toDateString();
+    if (now >= deadline || isDifferentDay) {
+        // Pastikan waktu check-out tidak melebihi waktu sekarang maupun sebelum waktu check-in
+        const finalOut = deadline <= now ? deadline : now;
+        return finalOut >= start ? finalOut.toISOString() : now.toISOString();
+    }
+
+    return null;
+}
+
+async function enforceAutoVisitorCheckOut(shouldReRender = false) {
+    if (isRunningAutoVisitorCheckOut || !window.appState || !Array.isArray(appState.allRecords)) return 0;
+
+    isRunningAutoVisitorCheckOut = true;
+    let updatedCount = 0;
+
+    try {
+        const activeVisitors = appState.allRecords.filter(v => {
+            if (v.type !== 'visitor') return false;
+            const checkOutRaw = v.visitorCheckOut || v.checkOut || '';
+            const statusRaw = (v.visitorStatus || v.status || '').toLowerCase();
+            return !checkOutRaw && statusRaw !== 'selesai' && statusRaw !== 'checked_out';
+        });
+
+        for (const visitor of activeVisitors) {
+            const checkInRaw = visitor.visitorCheckIn || visitor.visitDate || visitor.date || '';
+            const autoOutIso = computeAutoCheckOutTimestamp(checkInRaw);
+
+            if (autoOutIso) {
+                const prevNote = (visitor.visitorNotes || visitor.notes || '').trim();
+                const autoTag = 'Auto Check-Out (batas waktu kunjungan)';
+                const updatedNote = prevNote ? `${prevNote} • ${autoTag}` : autoTag;
+
+                const updatedVisitor = {
+                    ...visitor,
+                    visitorCheckOut: autoOutIso,
+                    checkOut: autoOutIso,
+                    visitorStatus: 'selesai',
+                    status: 'Selesai',
+                    visitorNotes: updatedNote,
+                    notes: updatedNote
+                };
+
+                // Perbarui state lokal segera agar tampilan langsung akurat
+                appState.allRecords = appState.allRecords.map(r => (r === visitor ? updatedVisitor : r));
+                updatedCount++;
+
+                // Sinkronkan ke database / Google Sheets
+                if (window.dataSdk && typeof window.dataSdk.sendData === 'function') {
+                    await window.dataSdk.sendData('update', updatedVisitor);
+                }
+            }
+        }
+
+        if (updatedCount > 0 && shouldReRender && typeof renderCurrentSection === 'function') {
+            renderCurrentSection();
+        }
+    } finally {
+        isRunningAutoVisitorCheckOut = false;
+    }
+
+    return updatedCount;
+}
+
+// Jalankan pengecekan otomatis setiap 1 menit di latar belakang
+if (!window._visitorAutoCheckOutTimer) {
+    window._visitorAutoCheckOutTimer = setInterval(() => {
+        const isOnVisitorPage = document.getElementById('visitorTableBody') !== null;
+        enforceAutoVisitorCheckOut(isOnVisitorPage);
+    }, 60000);
 }
