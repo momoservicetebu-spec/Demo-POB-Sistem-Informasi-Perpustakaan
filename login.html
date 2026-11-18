@@ -40,39 +40,48 @@
         .anim-bulb { animation: bulbGlow 2.4s ease-in-out infinite; }
         .anim-shake { animation: shakeError 0.4s ease-in-out; }
 
-        /* Input kapsul membulat (Glass Pill) lembut & bebas kotak putih Autofill */
-        .login-underline-input {
-            background: rgba(255, 255, 255, 0.14);
-            border: 1.5px solid rgba(255, 255, 255, 0.28);
-            border-radius: 9999px;
-            color: #ffffff;
-            padding: 0.6rem 1.15rem;
+        /* Input kapsul kaca membulat (Glass Pill) */
+        input.login-underline-input {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-color: rgba(255, 255, 255, 0.16) !important;
+            background-image: none !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.32) !important;
+            border-radius: 9999px !important;
+            color: #ffffff !important;
+            padding: 0.65rem 1.2rem !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
             transition: all 0.25s ease;
         }
-        .login-underline-input::placeholder {
-            color: rgba(224, 231, 255, 0.7);
-        }
-        .login-underline-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.22);
-            border-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+
+        input.login-underline-input::placeholder {
+            color: rgba(224, 231, 255, 0.75) !important;
         }
 
-        /* Menghilangkan kotak putih kaku saat browser mengisi otomatis (Autofill) */
-        .login-underline-input:-webkit-autofill,
-        .login-underline-input:-webkit-autofill:hover,
-        .login-underline-input:-webkit-autofill:focus {
+        input.login-underline-input:focus {
+            outline: none !important;
+            background-color: rgba(255, 255, 255, 0.24) !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.14) !important;
+        }
+
+        /* Paksa override total kotak putih Autofill Chrome / Edge / Safari */
+        input.login-underline-input:autofill,
+        input.login-underline-input:-webkit-autofill,
+        input.login-underline-input:-webkit-autofill:hover,
+        input.login-underline-input:-webkit-autofill:focus,
+        input.login-underline-input:-webkit-autofill:active {
             -webkit-text-fill-color: #ffffff !important;
-            -webkit-box-shadow: 0 0 0px 1000px #494dd6 inset !important;
+            caret-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0 1000px #4b4fd8 inset !important;
+            box-shadow: 0 0 0 1000px #4b4fd8 inset !important;
             border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
             border-radius: 9999px !important;
-            transition: background-color 5000s ease-in-out 0s;
+            transition: background-color 9999s ease-in-out 0s !important;
         }
 
-        /* Mencegah auto-zoom di layar smartphone */
         @media (max-width: 767px) {
-            .login-underline-input { font-size: 16px !important; }
+            input.login-underline-input { font-size: 16px !important; }
         }
     </style>
     
