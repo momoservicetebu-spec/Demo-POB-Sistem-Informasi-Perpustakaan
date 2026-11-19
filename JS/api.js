@@ -1,6 +1,6 @@
 // JS/api.js
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnRb6cqYz0yJ1oDzIHqwLZiSU77KCc1BJ8az07iA9xbjbti5m13q9EaY-veLwkah5f/exec'; 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLz0iTnpbcv3vEv40lcyZT-gXSEMGi8WOQkAg5K55DNSnbrFLzhfNcpJHralG4pgIoaA/exec'; 
 
 function getProcessLoadingLabel(action, payload) {
     const typeMap = {
